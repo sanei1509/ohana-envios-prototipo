@@ -80,7 +80,7 @@ button{cursor:pointer;border:0;background:none;color:inherit}
 :focus-visible{outline:2.5px solid var(--brand);outline-offset:2px;border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.app{display:flex;flex-direction:column;height:100%;max-width:520px;margin:0 auto;position:relative;background:var(--bg)}
+.app{display:flex;flex-direction:column;min-height:100%;max-width:520px;margin:0 auto;position:relative;background:var(--bg)}
 @media(min-width:900px){.app{max-width:900px}}
 
 /* ===== header ===== */
@@ -107,7 +107,7 @@ button{cursor:pointer;border:0;background:none;color:inherit}
   font-size:13.5px;font-weight:700;color:var(--ink-2);box-shadow:var(--sh)}
 .roles button[aria-pressed="true"]{background:var(--solid);color:var(--on-solid)}
 
-.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+.scroll{flex:none;overflow:visible;
   padding:12px 20px calc(var(--navh) + 24px)}
 body.has-dock .scroll{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
@@ -118,17 +118,22 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
   z-index:50;display:flex;justify-content:center;padding:0 20px;pointer-events:none}
 .nav-in{display:flex;align-items:center;gap:3px;background:var(--nav-bg);border-radius:32px;
   padding:7px;box-shadow:var(--sh-nav);pointer-events:auto;max-width:100%}
-.nav button{min-height:46px;border-radius:26px;display:flex;align-items:center;gap:8px;
-  padding:0 15px;color:var(--nav-ink);font-size:14px;font-weight:700;position:relative}
+.nav button{min-height:46px;border-radius:26px;display:flex;align-items:center;gap:6px;
+  padding:0 11px;color:var(--nav-ink);font-size:13px;font-weight:700;position:relative}
 .nav button .icw{position:relative;display:grid;place-items:center;flex:none}
-.nav button .ic{font-size:19px;line-height:1}
-.nav button .lb{display:none;white-space:nowrap}
+.nav button .ic{font-size:17px;line-height:1}
+.nav button .lb{display:inline;white-space:nowrap}
 .nav button[aria-pressed="true"]{background:var(--nav-pill);color:var(--brand)}
-.nav button[aria-pressed="true"] .lb{display:inline}
 .nav .badge{position:absolute;top:-5px;right:-8px;background:var(--bad);color:var(--on-solid);font-size:10px;
   font-weight:800;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;
   padding:0 4px;border:2px solid var(--nav-bg)}
 .nav button[aria-pressed="true"] .badge{border-color:var(--nav-pill)}
+@media(max-width:390px){
+  .nav{padding:0 10px}
+  .nav-in{gap:1px;padding:6px}
+  .nav button{padding:0 8px;font-size:12px;gap:4px}
+  .nav button .ic{font-size:15px}
+}
 
 /* ===== section ===== */
 .sec{display:flex;flex-direction:column;gap:12px}
@@ -176,6 +181,7 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 /* ===== cards de envío ===== */
 .ec{background:var(--card);border-radius:var(--r-md);padding:15px;box-shadow:var(--sh);
   display:flex;flex-direction:column;gap:11px;width:100%;text-align:left}
+.ec>button[data-open]{width:100%;display:flex;flex-direction:column;gap:11px}
 .ec:active{transform:scale(.99)}
 .ec-top{display:flex;align-items:flex-start;gap:12px}
 .ec-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
@@ -188,6 +194,10 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 .ec-code{font-size:11.5px;font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums;flex:none}
 .ec-bot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding-top:11px;border-top:1px solid var(--line)}
+.ec-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.ec-act{min-height:34px;border-radius:17px;padding:0 12px;font-size:12px;font-weight:800;width:100%}
+.ec-act.label{background:var(--brand-soft);color:var(--brand-ink)}
+.ec-act.pay{background:var(--warn-soft);color:var(--warn)}
 .meta{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2);font-weight:600}
 
 /* ===== pills ===== */
@@ -225,7 +235,7 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 .btnrow{display:flex;gap:10px}
 .btnrow>.btn{flex:1}
 
-/* Flujo de una sola tarea (wizard, confirmación): la acción manda y la nav se oculta. */
+/* En acciones guiadas se mantiene la nav cuando hace falta salida entre secciones. */
 body.has-dock .nav{display:none}
 /* Pantallas donde hay que poder seguir navegando: el dock se apoya sobre la nav. */
 body.dock-over .nav{display:flex}
@@ -266,6 +276,8 @@ body.dock-over .dock{bottom:var(--navh);padding-bottom:10px;
   background:var(--card);outline:none}
 .hint{font-size:12.5px;color:var(--ink-3);line-height:1.4}
 .err{font-size:13px;color:var(--bad);font-weight:700;display:flex;gap:6px;align-items:flex-start}
+.checkline{display:flex;align-items:center;gap:10px;color:var(--ink-2);font-size:13.5px;font-weight:700}
+.checkline input{width:18px;min-height:18px;height:18px;accent-color:var(--brand);flex:none}
 .grid2{display:grid;grid-template-columns:1fr;gap:0}
 @media(min-width:460px){.grid2{grid-template-columns:1fr 1fr;gap:0 14px}}
 
@@ -536,6 +548,17 @@ button.otrodia:active{transform:scale(.99)}
   color:var(--bg);padding:16px 20px;border-radius:18px;font-size:14.5px;font-weight:700;
   box-shadow:var(--sh-nav);z-index:100;text-align:center;max-width:480px;margin:0 auto;
   animation:rise .22s ease}
+.label-preview{background:#fff;color:#101816;border:2px dashed #aebbb6;border-radius:12px;
+  padding:18px;font-family:Arial,sans-serif}
+.label-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid #101816;
+  padding-bottom:12px;margin-bottom:12px}
+.label-brand{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.label-code{font-size:26px;font-weight:800;letter-spacing:.03em}
+.label-row{display:grid;grid-template-columns:72px 1fr;gap:10px;font-size:13px;margin-top:9px}
+.label-row b{color:#5f6f68;text-transform:uppercase;font-size:10px;letter-spacing:.08em}
+.label-dest{font-size:18px;font-weight:800;line-height:1.2}
+.label-bar{display:block;width:100%;height:64px;margin-top:16px;background:#fff}
+.label-barcode-id{text-align:center;color:#101816;font-size:12px;font-weight:800;letter-spacing:.18em;margin-top:7px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;font-size:14.5px;align-items:baseline}
 .kv dt{color:var(--ink-3);font-weight:700;font-size:12.5px}
 .kv dd{margin:0;line-height:1.4;font-weight:500}
@@ -585,6 +608,11 @@ function jornadas(n=10){ // n días hábiles desde hoy
   return out;
 }
 const JORNADAS=jornadas(10);
+const ZONAS={mvd:{l:'Montevideo',precio:200},costa:{l:'Costa de Oro',precio:300}};
+const diasCosta=f=>{const[y,m,d]=f.split('-').map(Number);return [1,3,5].includes(new Date(y,m-1,d).getDay())};
+const jornadasZona=z=>z==='costa'?JORNADAS.filter(diasCosta):JORNADAS;
+const precioZona=z=>(ZONAS[z]||ZONAS.mvd).precio;
+const nombreZona=z=>(ZONAS[z]||ZONAS.mvd).l;
 function labelDia(f){
   const [y,m,dd]=f.split('-').map(Number), d=new Date(y,m-1,dd);
   const hoyD=new Date(); hoyD.setHours(0,0,0,0);
@@ -617,6 +645,7 @@ const evt=(t,d,w)=>({t,d,who:w,ts:nowISO()});
 function mk(o){const id=nextE();
   return{id,cliente:o.cliente,retiro:o.retiro,destinatario:o.destinatario,entrega:o.entrega,
     tel:o.tel||'099 000 000',fecha:o.fecha||HOY,ventana:o.ventana,estado:o.estado||'pendiente',cadete:o.cadete||null,
+    zona:o.zona||'mvd',precio:o.precio||precioZona(o.zona||'mvd'),
     custodia:o.custodia||'Cliente/remitente',urgente:!!o.urgente,fragil:!!o.fragil,notas:o.notas||'',
     paquetes:o.paquetes.map((p,i)=>({id:nextP(),tam:p.tam,estado:p.estado||o.estado||'pendiente',n:i+1})),
     hist:o.hist||[evt('Envío registrado','Estado pendiente · custodia del remitente','Admin')]}}
@@ -657,7 +686,7 @@ let ENVIOS=[
       evt('Entrega no concretada','Destinatario ausente · reprogramar','Pedro S.')]})
 ];
 
-let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null;
+let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null;
 let DIA=JORNADAS[0],ATRAS=null,CAL=false;
 let MAS=null; // {paso, cliente, filas[], excluidas[]}
 
@@ -690,19 +719,19 @@ const PLANILLA=()=>[
 let PLANI={c1:[],c2:[],c3:[]};
 
 const NAV={
-  admin:[{k:'inicio',l:'Inicio',i:'◈'},{k:'envios',l:'Envíos',i:'▤'},
-    {k:'alta',l:'Nuevo',i:'＋'},{k:'masiva',l:'Cargar',i:'▤'},{k:'cadetes',l:'Equipo',i:'◉'}],
-  cadete:[{k:'tareas',l:'Tareas',i:'◈'},{k:'hoy',l:'Mi día',i:'▦'}],
-  cliente:[{k:'mis',l:'Envíos',i:'▤'},{k:'nuevo',l:'Pedir',i:'＋'}]
+  admin:[{k:'inicio',l:'Inicio',i:'⌂'},{k:'envios',l:'Envíos',i:'▣'},
+    {k:'alta',l:'Nuevo',i:'+'},{k:'masiva',l:'Cargar',i:'⇧'},{k:'cadetes',l:'Equipo',i:'👥'}],
+  cadete:[{k:'tareas',l:'Tareas',i:'✓'},{k:'hoy',l:'Mi día',i:'📍'}],
+  cliente:[{k:'mis',l:'Envíos',i:'▣'},{k:'nuevo',l:'Pedir',i:'+'}]
 };
 const HEAD={
   inicio:{t:'Organizá el día,<em>sin vueltas.</em>',s:'Distribuí los envíos pendientes entre tu equipo.'},
-  envios:{t:'Buscá cualquier<em>envío o bulto.</em>',s:'Por código, cliente, destinatario o dirección.'},
+  envios:{t:'Buscá cualquier<em>envío.</em>',s:'Por código, cliente, destinatario o dirección.'},
   alta:{t:'Nuevo envío',s:'Cargá la solicitud paso a paso.'},
   cadetes:{t:'Tu equipo<em>de hoy.</em>',s:'Quién está libre y cuánto tiene asignado.'},
   tareas:{t:'Tus entregas<em>de hoy.</em>',s:'Seguí el recorrido parada por parada.'},
   hoy:{t:'Cómo venís<em>hoy.</em>',s:'Tu avance de la jornada.'},
-  mis:{t:'Seguí tus envíos<em>en tiempo real.</em>',s:'Estado actualizado de cada paquete.'},
+  mis:{t:'Seguí tus envíos<em>en tiempo real.</em>',s:'Estado actualizado de cada envío.'},
   nuevo:{t:'Pedir un envío',s:'Contanos qué hay que llevar y adónde.'},
   masiva:{t:'Cargar<em>varios envíos.</em>',s:'Subí una planilla y creá todo de una vez.'}
 };
@@ -711,7 +740,20 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cadN=id=>(CAD.find(c=>c.id===id)||{}).n||'—';
 const cadIc=id=>(CAD.find(c=>c.id===id)||{}).ic||'◉';
+const LOC_COSTA=['Solymar','Shangrilá','Otra'];
+function topPage(){window.scrollTo({top:0,left:0,behavior:'auto'})}
 function toast(m){TOAST=m;render();clearTimeout(toast._t);toast._t=setTimeout(()=>{TOAST=null;render()},2800)}
+function retiroDraft(d){
+  return (d.retiroNuevo||d.retiro||'').trim();
+}
+function entregaDraft(d){
+  if(d.zona==='costa'){
+    const c=d.entregaCosta||{},loc=c.loc==='Otra'?(c.otra||'').trim():c.loc;
+    if(!loc||!c.calle?.trim()||!c.manzana?.trim()||!c.solar?.trim()||!c.desc?.trim())return'';
+    return `Costa de Oro · ${loc}: ${c.calle.trim()}, manzana ${c.manzana.trim()}, solar ${c.solar.trim()}. ${c.desc.trim()}`;
+  }
+  return (d.entrega||'').trim();
+}
 function bul(e){return{t:e.paquetes.length,d:e.paquetes.filter(p=>p.estado==='entregado').length,
   r:e.paquetes.filter(p=>['retirado','ruta','entregado'].includes(p.estado)).length}}
 function sync(e){const{t,d}=bul(e);
@@ -720,19 +762,18 @@ function sync(e){const{t,d}=bul(e);
   else if(d>0&&d<t)e.estado='parcial';
   else if(e.paquetes.some(p=>p.estado==='retirado'))e.estado='retirado'}
 function progHTML(e){const b=bul(e);
-  return `<span class="prog">${e.paquetes.map(p=>`<i class="${p.estado==='entregado'?'on':
-    p.estado==='incidencia'?'bad':['retirado','ruta'].includes(p.estado)?'warn':''}"></i>`).join('')}</span>
-    <span class="meta">${b.d}/${b.t}</span>`}
+  return `<span class="meta pkg-count">▦ ${b.t} bulto${b.t>1?'s':''}</span>`}
 const icFor=e=>e.estado==='entregado'?'✓':e.estado==='incidencia'?'!':e.urgente?'⚡':'▣';
 
 /* ===== vistas ===== */
 function vInicio(){
   const enP=Object.values(PLANI).flat();
-  // Envíos de la jornada elegida + arrastre de días anteriores sin resolver.
+  // La alerta muestra todo lo atrasado; la asignación solo lista pendientes reales.
   const delDia=ENVIOS.filter(e=>e.estado==='pendiente'&&e.fecha===DIA&&!enP.includes(e.id));
   const atrasados=DIA===HOY?ENVIOS.filter(e=>esPasado(e.fecha)
     &&['pendiente','asignado','incidencia'].includes(e.estado)&&!enP.includes(e.id)):[];
-  const pend=[...atrasados,...delDia];
+  const atrasadosAsignables=atrasados.filter(e=>e.estado==='pendiente');
+  const pend=[...atrasadosAsignables,...delDia];
   const act=ENVIOS.filter(e=>['asignado','retirado','ruta','parcial'].includes(e.estado)).length;
   const inc=ENVIOS.filter(e=>e.estado==='incidencia').length;
   const cuenta=f=>ENVIOS.filter(e=>e.fecha===f&&e.estado==='pendiente').length;
@@ -792,7 +833,7 @@ function cdCard(c){
     <div class="cd-av">${c.ic}</div>
     <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
       <div class="cd-v">${c.v}${yaTiene?` · ${yaTiene} envío${yaTiene>1?'s':''} en curso`:''}</div></div>
-    ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Libre</span>':'<span class="pill p-pend"><i class="dot"></i>Ocupado</span>'}</div>
+    ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Disponible</span>':'<span class="pill p-pend"><i class="dot"></i>No disponible</span>'}</div>
     <div class="cd-v" style="margin-top:4px"><b style="color:var(--brand-ink)">+${asg.length} envío${asg.length>1?'s':''}</b> · ${nb} bulto${nb>1?'s':''} en este borrador</div>
     ${asg.length?`<div class="assigned">${asg.map(id=>{const e=ENVIOS.find(x=>x.id===id);
       return `<div class="chipa"><span class="cc">${id}</span>
@@ -806,13 +847,25 @@ function ecCard(e,mode){
   const b=bul(e),r=e.estado==='asignado';
   const icbg=e.estado==='entregado'?'var(--ok-soft)':e.estado==='incidencia'?'var(--bad-soft)':
     e.urgente?'var(--bad-soft)':'var(--soft)';
-  return `<button class="ec" data-open="${e.id}"><div class="ec-top">
+  const inner=`<div class="ec-top">
     <span class="ec-ic" style="background:${icbg}">${mode==='tarea'?(r?'↑':'↓'):icFor(e)}</span>
     <div class="ec-m"><div class="ec-n">${mode==='tarea'?(r?'Retirar de ':'Entregar a ')+esc(r?e.cliente:e.destinatario):esc(e.destinatario)}</div>
       <div class="ec-a">${esc(mode==='tarea'?(r?e.retiro:e.entrega):e.entrega)}</div></div>
     <span class="ec-code">${e.id}</span></div>
   <div class="ec-bot">${pill(e.estado)}${e.urgente?'<span class="urg">URGENTE</span>':''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}
-    ${progHTML(e)}<span class="meta" style="margin-left:auto">◔ ${e.ventana}</span></div></button>`;
+    ${progHTML(e)}<span class="meta" style="margin-left:auto">◔ ${e.ventana}</span></div>`;
+  const card=`<button class="ec" data-open="${e.id}">${inner}</button>`;
+  const puedeImprimir=mode==='cliente'&&['pendiente','asignado'].includes(e.estado);
+  if(mode==='cliente'){
+    return `<div class="ec">
+      <button data-open="${e.id}" style="text-align:left">${inner}</button>
+      <div class="ec-actions">
+        ${puedeImprimir?`<button class="ec-act label" data-label="${e.id}">Imprimir etiqueta</button>`:''}
+        <button class="ec-act pay" data-pay="${e.id}">Cargar comprobante</button>
+      </div>
+    </div>`;
+  }
+  return card;
 }
 
 function vEnvios(){
@@ -820,22 +873,23 @@ function vEnvios(){
   let L=f==='atrasados'
     ?ENVIOS.filter(e=>esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado))
     :ENVIOS.filter(e=>f==='todos'||e.estado===f);
-  if(q)L=L.filter(e=>(e.id+e.cliente+e.destinatario+e.entrega).toLowerCase().includes(q)
-    ||e.paquetes.some(p=>p.id.toLowerCase().includes(q)));
+  if(q)L=L.filter(e=>(e.id+e.cliente+e.destinatario+e.entrega).toLowerCase().includes(q));
   const atr=ENVIOS.filter(e=>esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)).length;
   const fs=[['todos','Todos'],...(atr?[['atrasados','Atrasados ('+atr+')']]:[]),
     ['pendiente','Pendientes'],['asignado','Asignados'],['retirado','En poder'],
-    ['parcial','Parciales'],['entregado','Entregados'],['incidencia','Incidencias']];
+    ['entregado','Entregados'],['incidencia','Incidencias']];
   return `<div class="search"><span class="ic">⌕</span>
-    <input id="q" inputmode="search" placeholder="Buscar envío o bulto…" value="${esc(vEnvios.q||'')}"></div>
+    <input id="q" inputmode="search" placeholder="Buscar envío…" value="${esc(vEnvios.q||'')}"></div>
   <div class="chips">${fs.map(([k,l])=>`<button data-f="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
   <div class="sec">${L.length?L.map(e=>ecCard(e)).join(''):
     '<div class="empty"><div class="ic">🔍</div><p>Nada por acá</p><small>Probá con otro código o sacá los filtros.</small></div>'}</div>`;
 }
 
 function vAlta(){
-  const d=DRAFT||(DRAFT={paso:1,cliente:ROL==='cliente'?'Boutique Amalia':'',retiro:'',dest:'',tel:'',
-    entrega:'',fecha:JORNADAS[0],ventana:'',notas:'',urgente:false,fragil:false,paquetes:[{tam:'M'}],err:{}});
+  const d=DRAFT||(DRAFT={paso:1,cliente:ROL==='cliente'?'Boutique Amalia':'',retiro:'',retiroNuevo:'',
+    dest:'',tel:'',entregaCosta:{loc:'Solymar',otra:'',calle:'',manzana:'',solar:'',desc:''},
+    entrega:'',zona:'mvd',fecha:JORNADAS[0],ventana:'',notas:'',urgente:false,fragil:false,
+    favRetiro:false,paquetes:[{tam:'M'}],err:{}});
   const ps=['Cliente','Destino','Bultos','Revisar'];
   let b='';
   if(d.paso===1){const cl=CLI.find(c=>c.n===d.cliente);
@@ -844,27 +898,58 @@ function vAlta(){
       ${CLI.map(c=>`<option ${d.cliente===c.n?'selected':''}>${esc(c.n)}</option>`).join('')}</select>
       ${d.err.cliente?`<div class="err">⚠ ${d.err.cliente}</div>`:''}</div>
       <div class="field"><label for="f-ret">¿De dónde lo retiramos?</label>
-      <select id="f-ret" ${cl?'':'disabled'}><option value="">${cl?'Elegí una dirección…':'Primero elegí el cliente'}</option>
+      <select id="f-ret" ${cl?'':'disabled'}><option value="">${cl?'Elegí una dirección favorita…':'Primero elegí el cliente'}</option>
       ${cl?cl.dirs.map(x=>`<option ${d.retiro===x?'selected':''}>${esc(x)}</option>`).join(''):''}</select>
-      <span class="hint">Son las direcciones guardadas de este cliente.</span>
-      ${d.err.retiro?`<div class="err">⚠ ${d.err.retiro}</div>`:''}</div>`;
+      <span class="hint">Direcciones favoritas de retiro guardadas para este cliente.</span></div>
+      ${d.retiro?'':`<div class="field"><label for="f-ret-new">Ingresar una nueva dirección de retiro</label>
+      <input id="f-ret-new" value="${esc(d.retiroNuevo)}" placeholder="${cl?'Calle, número y barrio':'Primero elegí el cliente'}"
+        ${cl?'':'disabled'} autocomplete="street-address">
+      <label class="checkline" for="f-fav-ret">
+        <input id="f-fav-ret" type="checkbox" ${d.favRetiro?'checked':''} ${cl?'':'disabled'}>
+        Marcar esta dirección como favorita
+      </label>
+      <span class="hint">Si escribís una nueva dirección, se usará en lugar de la favorita seleccionada.</span>
+      ${d.err.retiro?`<div class="err">⚠ ${d.err.retiro}</div>`:''}</div>`}`;
   }else if(d.paso===2){
+    const fechas=jornadasZona(d.zona);
+    if(!fechas.includes(d.fecha))d.fecha=fechas[0];
     b=`<div class="grid2"><div class="field"><label for="f-dest">¿Quién recibe?</label>
       <input id="f-dest" value="${esc(d.dest)}" placeholder="Nombre y apellido" autocomplete="name">
       ${d.err.dest?`<div class="err">⚠ ${d.err.dest}</div>`:''}</div>
       <div class="field"><label for="f-tel">Teléfono</label>
       <input id="f-tel" type="tel" inputmode="tel" value="${esc(d.tel)}" placeholder="09X XXX XXX"></div></div>
-      <div class="field"><label for="f-ent">¿Adónde lo llevamos?</label>
+      <div class="field"><label for="f-zona">Zona de entrega</label>
+      <select id="f-zona">
+        <option value="mvd" ${d.zona==='mvd'?'selected':''}>Montevideo · $200</option>
+        <option value="costa" ${d.zona==='costa'?'selected':''}>Costa de Oro · $300</option>
+      </select>
+      <span class="hint">${d.zona==='costa'?'Completá localidad, manzana, solar y referencias para llegar.':'Tarifa base para paquetes medianos dentro de Montevideo.'}</span></div>
+      ${d.zona==='mvd'?`<div class="field"><label for="f-ent">¿Adónde lo llevamos?</label>
       <input id="f-ent" value="${esc(d.entrega)}" placeholder="Calle, número y barrio">
-      ${d.err.entrega?`<div class="err">⚠ ${d.err.entrega}</div>`:''}</div>
+      ${d.err.entrega?`<div class="err">⚠ ${d.err.entrega}</div>`:''}</div>`:
+      `<div class="field"><label for="f-ent-loc">Localidad</label>
+      <select id="f-ent-loc">
+        ${LOC_COSTA.map(x=>`<option ${d.entregaCosta.loc===x?'selected':''}>${x}</option>`).join('')}
+      </select></div>
+      ${d.entregaCosta.loc==='Otra'?`<div class="field"><label for="f-ent-otra">¿Cuál localidad?</label>
+        <input id="f-ent-otra" value="${esc(d.entregaCosta.otra)}" placeholder="Ej. Lagomar"></div>`:''}
+      <div class="grid2"><div class="field"><label for="f-ent-calle">Calle</label>
+        <input id="f-ent-calle" value="${esc(d.entregaCosta.calle)}" placeholder="Nombre de calle"></div>
+        <div class="field"><label for="f-ent-manzana">Manzana</label>
+        <input id="f-ent-manzana" value="${esc(d.entregaCosta.manzana)}" placeholder="Número o letra"></div></div>
+      <div class="field"><label for="f-ent-solar">Solar</label>
+        <input id="f-ent-solar" value="${esc(d.entregaCosta.solar)}" placeholder="Número de solar"></div>
+      <div class="field"><label for="f-ent-desc">Descripción para llegar</label>
+        <textarea id="f-ent-desc" placeholder="Referencias, esquina, color de casa, indicaciones...">${esc(d.entregaCosta.desc)}</textarea>
+        ${d.err.entrega?`<div class="err">⚠ ${d.err.entrega}</div>`:''}</div>`}
       <div class="field"><label>¿Qué día lo retiramos?</label>
-        <div class="diapick">${JORNADAS.slice(0,5).map(f=>`
+        <div class="diapick">${fechas.slice(0,5).map(f=>`
           <button class="dp ${d.fecha===f?'on':''}" data-fecha="${f}">
             <span class="dp-d">${labelDia(f)}</span><span class="dp-n">${numDia(f)}</span></button>`).join('')}
-          ${!JORNADAS.slice(0,5).includes(d.fecha)?`<button class="dp on" data-fecha="${d.fecha}">
+          ${!fechas.slice(0,5).includes(d.fecha)?`<button class="dp on" data-fecha="${d.fecha}">
             <span class="dp-d">${labelDia(d.fecha)}</span><span class="dp-n">${numDia(d.fecha)}</span></button>`:''}
         </div>
-        <span class="hint" style="margin-top:8px;display:block">Deslizá para ver más días. No trabajamos sábados ni domingos.</span>
+        <span class="hint" style="margin-top:8px;display:block">${d.zona==='costa'?'Costa de Oro: lunes, miércoles y viernes.':'Deslizá para ver más días. No trabajamos sábados ni domingos.'}</span>
       </div>
       <div class="field"><label for="f-ven">¿En qué horario?</label>
       <select id="f-ven"><option value="">Elegí una franja…</option>
@@ -883,7 +968,7 @@ function vAlta(){
         <div class="qty-n"><span class="q">${n}</span><span class="ql">${n===1?'bulto':'bultos'}</span></div>
         <button class="qty-b" id="pk-mas" ${n>=20?'disabled':''} aria-label="Agregar un bulto">+</button>
       </div>
-      <div class="qty-hint">Se generan <b>${n} etiqueta${n>1?'s':''}</b>${n>1?` numeradas 1 de ${n}, 2 de ${n}…`:''}</div>
+      <div class="qty-hint">Todos los bultos van al mismo destino de entrega. Si van a direcciones distintas, cargalos como envíos separados. Se genera <b>una etiqueta</b> para el envío.</div>
       <div class="sep" style="height:1px;background:var(--line);margin:20px 0"></div>
       <div class="field" style="margin-bottom:0"><label>Tamaño de los bultos</label>
         <div class="tamgrid">${TAM.map(([k,l,ej])=>`
@@ -903,10 +988,12 @@ function vAlta(){
       <dt>Retiro</dt><dd>${esc(d.retiro)}</dd>
       <dt>Recibe</dt><dd>${esc(d.dest)}${d.tel?'<br><span class="hint">'+esc(d.tel)+'</span>':''}</dd>
       <dt>Entrega</dt><dd>${esc(d.entrega)}</dd>
+      <dt>Zona</dt><dd>${nombreZona(d.zona)}</dd>
       <dt>Horario</dt><dd>${esc(d.ventana)}${d.urgente?' <span class="urg">URGENTE</span>':''}</dd>
       <dt>Bultos</dt><dd>${d.paquetes.length} ${d.paquetes.length===1?'bulto':'bultos'} · tamaño ${d.paquetes[0].tam}${d.fragil?' <span class="frag">◆ FRÁGIL</span>':''}</dd>
+      <dt>Precio</dt><dd><b>$${precioZona(d.zona)}</b></dd>
       ${d.notas?`<dt>Notas</dt><dd>${esc(d.notas)}</dd>`:''}</dl>
-      <div class="note" style="margin-top:18px"><span class="ni">✓</span><div>Queda <b>pendiente</b>, sin cadete asignado y con la custodia del remitente. Se generan <b>${d.paquetes.length} etiqueta${d.paquetes.length>1?'s':''}</b>.</div></div>`;
+      <div class="note" style="margin-top:18px"><span class="ni">✓</span><div>Queda <b>pendiente</b>, sin cadete asignado y con la custodia del remitente. El precio del envío es <b>$${precioZona(d.zona)}</b> y se genera <b>una etiqueta del envío</b>.</div></div>`;
   }
   return `<div class="steps">${ps.map((p,i)=>`<div class="step ${d.paso===i+1?'on':''} ${d.paso>i+1?'done':''}">
     <div class="bar"></div><div class="lb">${p}</div></div>`).join('')}</div>
@@ -1022,20 +1109,27 @@ function vCadetes(){
       <div class="cd-av">${c.ic}</div>
       <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
         <div class="cd-v">${c.v} · ${act} tarea${act===1?'':'s'} activa${act===1?'':'s'}</div></div>
-      ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Libre</span>':'<span class="pill p-pend"><i class="dot"></i>Ocupado</span>'}</div>
+      ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Disponible</span>':'<span class="pill p-pend"><i class="dot"></i>No disponible</span>'}</div>
       <div class="cd-v" style="margin-top:2px">${act?`${bl} bulto${bl>1?'s':''} en mano`:'Sin envíos asignados'}</div>
       <button class="btn sm soft full" style="margin-top:13px" data-toggle="${c.id}">
-        ${c.disp?'Marcar como ocupado':'Marcar como libre'}</button></div>`}).join('')}</div>
+        ${c.disp?'Marcar no disponible':'Marcar disponible'}</button></div>`}).join('')}</div>
   <div class="note"><span class="ni">💡</span><div>Si un cadete tiene tareas activas, primero hay que reasignarlas antes de marcarlo ocupado.</div></div>`;
 }
 
 function vTareas(){
-  const m=ENVIOS.filter(e=>e.cadete==='c1'&&!['entregado','cancelado'].includes(e.estado));
+  const m=ENVIOS.filter(e=>e.cadete==='c1'&&!['entregado','cancelado'].includes(e.estado))
+    .sort((a,b)=>{
+      const pa=a.estado==='asignado'?0:1,pb=b.estado==='asignado'?0:1;
+      if(pa!==pb)return pa-pb;
+      const ta=new Date(a.hist.at(-1)?.ts||0),tb=new Date(b.hist.at(-1)?.ts||0);
+      return ta-tb;
+    });
   const px=m[0],r=px&&px.estado==='asignado';
   return `${px?`<div class="bignext"><div class="bt">
       <div class="act">${r?'↑ Próximo retiro':'↓ Próxima entrega'}</div>
       <div class="ad">${esc(r?px.retiro:px.entrega)}</div></div>
     <div class="bb"><dl class="kv">
+      <dt>Pedido</dt><dd>${px.id}</dd>
       <dt>${r?'Retirás de':'Entregás a'}</dt><dd>${esc(r?px.cliente:px.destinatario)}</dd>
       <dt>Teléfono</dt><dd><a class="tel" href="tel:${esc(px.tel.replace(/ /g,''))}">${esc(px.tel)} ↗</a></dd>
       <dt>Horario</dt><dd>${px.ventana}</dd>
@@ -1079,14 +1173,29 @@ function vMis(){
   return `${act?`<div class="hero"><div class="hero-k">En camino</div>
     <h4>${act} envío${act>1?'s':''} en curso</h4><p>Te avisamos cuando se entreguen.</p></div>`:''}
   <div class="sec"><div class="sec-h"><h3>Tus envíos</h3></div>
-  ${m.map(e=>ecCard(e)).join('')}</div>
-  <div class="note"><span class="ni">🔒</span><div>Ves el estado y el historial de tus envíos. Los datos internos de la operación quedan del lado de Ohana.</div></div>`;
+  ${m.map(e=>ecCard(e,'cliente')).join('')}</div>`;
 }
 
 /* ===== sheets ===== */
+function histCliente(e){
+  const hs=e.hist;
+  const primero=hs[0]||evt('Pedido recibido','Tenemos la solicitud del envío.','Ohana');
+  const out=[{t:'Pedido recibido',d:'Tenemos la solicitud del envío.',ts:primero.ts}];
+  const ret=[...hs].reverse().find(h=>h.t.startsWith('Retiro confirmado'));
+  if(ret)out.push({t:'Retirado',d:'El envío ya fue retirado y sigue camino a destino.',ts:ret.ts});
+  const ent=[...hs].reverse().find(h=>h.t.startsWith('Entrega confirmada'));
+  if(ent)out.push({t:'Entregado',d:'El envío fue entregado correctamente.',ts:ent.ts});
+  const inc=[...hs].reverse().find(h=>h.t.includes('no concretad')||h.t.includes('Incidencia'));
+  if(inc)out.push({t:'Incidencia registrada',d:'Estamos revisando el próximo paso del envío.',ts:inc.ts});
+  return out;
+}
+
 function shDet(){
   const e=ENVIOS.find(x=>x.id===SEL);if(!e)return'';
-  const b=bul(e),cli=ROL==='cliente';
+  const cli=ROL==='cliente';
+  const hist=cli?histCliente(e):e.hist.map(h=>({...h,showWho:true}));
+  const resumenBultos=e.paquetes.reduce((a,p)=>{a[p.tam]=(a[p.tam]||0)+1;return a},{});
+  const txtBultos=Object.entries(resumenBultos).map(([tam,n])=>`${n} ${tam}`).join(' · ');
   return `<div class="sh-bg" data-close><div class="sh" role="dialog" aria-label="Detalle del envío">
     <div class="grab"></div>
     <div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
@@ -1101,13 +1210,13 @@ function shDet(){
         <dt>Horario</dt><dd>${esc(e.ventana)}</dd>
         ${!cli?`<dt>Cadete</dt><dd>${e.cadete?cadIc(e.cadete)+' '+esc(cadN(e.cadete)):'Sin asignar'}</dd>
         <dt>Custodia</dt><dd>${esc(e.custodia)}</dd>`:''}</dl></div>
-      <div class="panel"><div class="panel-t">Bultos · ${b.d} de ${b.t} entregados</div>
-        ${e.paquetes.map(p=>`<div class="pk"><div class="pk-d"><b>${p.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
-          ${pill(p.estado)}</div>`).join('')}</div>
+      <div class="panel"><div class="panel-t">Bultos del envío · mismo destino</div>
+        <div class="pk"><div class="pk-d"><b>ENVÍO ${e.id}</b><br>${e.paquetes.length} bulto${e.paquetes.length>1?'s':''} · ${txtBultos}</div>
+          ${pill(e.estado)}</div></div>
       <div class="panel"><div class="panel-t">Historial</div>
-        <div class="tl">${e.hist.slice().reverse().map((h,i)=>`<div class="tl-i ${i===0?'hl':''}">
+        <div class="tl">${hist.slice().reverse().map((h,i)=>`<div class="tl-i ${i===0?'hl':''}">
           <div class="tl-t">${esc(h.t)}</div><div class="tl-m">${esc(h.d)}</div>
-          <div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)} · ${esc(h.who)}</div></div>`).join('')}</div></div>
+          <div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)}${h.showWho?' · '+esc(h.who):''}</div></div>`).join('')}</div></div>
     </div>
     <div class="sh-f">
       ${!cli&&e.estado==='asignado'?`<button class="btn lg pri" data-retiro="${e.id}">Confirmar retiro</button>`:''}
@@ -1121,7 +1230,8 @@ function shOp(){
   const e=ENVIOS.find(x=>x.id===OP.envio);if(!e)return'';
   const r=OP.tipo==='retiro';
   const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
-  const all=OP.sel.length===el.length;
+  const resumenBultos=e.paquetes.reduce((a,p)=>{a[p.tam]=(a[p.tam]||0)+1;return a},{});
+  const txtBultos=Object.entries(resumenBultos).map(([tam,n])=>`${n} ${tam}`).join(' · ');
   return `<div class="sh-bg" data-closeop><div class="sh" role="dialog">
     <div class="grab"></div>
     <div class="sh-h"><div><div class="hint" style="font-weight:700">${r?'Retiro':'Entrega'} · ${e.id}</div>
@@ -1130,15 +1240,12 @@ function shOp(){
     <div class="sh-b">
       ${e.fragil?`<div class="note warn" style="margin-bottom:14px"><span class="ni">◆</span>
         <div><b>Contenido frágil.</b> Manejá los bultos con cuidado al ${r?'cargarlos':'entregarlos'}.</div></div>`:''}
-      <div class="panel"><div class="panel-t">¿Qué bultos ${r?'retirás':'entregás'}?</div>
-        <button class="btn sm soft full" id="selall" style="margin-bottom:12px">
-          ${all?'Desmarcar todos':`Marcar los ${el.length}`}</button>
-        ${el.map(p=>`<label class="pk ${OP.sel.includes(p.id)?'on':''}">
-          <input type="checkbox" class="chk" data-pk="${p.id}" ${OP.sel.includes(p.id)?'checked':''}>
-          <div class="pk-d"><b>${p.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
-          </label>`).join('')}
-        ${OP.sel.length&&!all?`<div class="note warn" style="margin-top:13px"><span class="ni">⚠</span>
-          <div><b>${r?'Retiro':'Entrega'} parcial.</b> Los ${el.length-OP.sel.length} bultos restantes siguen su curso.</div></div>`:''}
+      <div class="panel"><div class="panel-t">${r?'Retirar':'Entregar'} envío completo</div>
+        <div class="note" style="margin-bottom:13px"><span class="ni">▦</span>
+          <div>Este envío tiene <b>${e.paquetes.length} bulto${e.paquetes.length>1?'s':''}</b> para el mismo destino. Si alguno no puede ${r?'retirarse':'entregarse'}, registrá una incidencia del envío.</div></div>
+        <div class="pk">
+          <div class="pk-d"><b>ENVÍO ${e.id}</b><br>${e.paquetes.length} bulto${e.paquetes.length>1?'s':''} · ${txtBultos}</div>
+          ${pill(e.estado)}</div>
       </div>
       <div class="panel">
         ${!r?`<div class="field"><label for="op-rec">¿Quién lo recibe?</label>
@@ -1149,8 +1256,8 @@ function shOp(){
       </div>
       <button class="btn danger full" data-fallo>No se pudo ${r?'retirar':'entregar'}</button>
     </div>
-    <div class="sh-f"><button class="btn lg pri" data-confirmop ${OP.sel.length?'':'disabled'}>
-      ${OP.sel.length?`Confirmar ${OP.sel.length} bulto${OP.sel.length>1?'s':''}`:'Marcá al menos uno'}</button></div>
+    <div class="sh-f"><button class="btn lg pri" data-confirmop>
+      Confirmar ${r?'retiro':'entrega'}</button></div>
   </div></div>`;
 }
 
@@ -1188,7 +1295,6 @@ function shPick(){
       ${PICK.sel.length?`Asignar ${PICK.sel.length} envío${PICK.sel.length>1?'s':''} · ${selBultos} bulto${selBultos>1?'s':''}`:'Marcá al menos un envío'}</button></div>`:''}
   </div></div>`;
 }
-
 
 function shCal(){
   if(!CAL)return'';
@@ -1252,6 +1358,102 @@ function shAtras(){
   </div></div>`;
 }
 
+const CODE128=[
+  '212222','222122','222221','121223','121322','131222','122213','122312','132212','221213',
+  '221312','231212','112232','122132','122231','113222','123122','123221','223211','221132',
+  '221231','213212','223112','312131','311222','321122','321221','312212','322112','322211',
+  '212123','212321','232121','111323','131123','131321','112313','132113','132311','211313',
+  '231113','231311','112133','112331','132131','113123','113321','133121','313121','211331',
+  '231131','213113','213311','213131','311123','311321','331121','312113','312311','332111',
+  '314111','221411','431111','111224','111422','121124','121421','141122','141221','112214',
+  '112412','122114','122411','142112','142211','241211','221114','413111','241112','134111',
+  '111242','121142','121241','114212','124112','124211','411212','421112','421211','212141',
+  '214121','412121','111143','111341','131141','114113','114311','411113','411311','113141',
+  '114131','311141','411131','211412','211214','211232','2331112'
+];
+function barcode128SVG(text){
+  const codes=[104], chars=String(text).replace(/[^\x20-\x7f]/g,'');
+  for(const ch of chars)codes.push(ch.charCodeAt(0)-32);
+  let sum=codes[0];for(let i=1;i<codes.length;i++)sum+=codes[i]*i;
+  codes.push(sum%103,106);
+  const quiet=10,h=58;
+  let x=quiet,rects='';
+  codes.forEach(code=>{
+    const p=CODE128[code];
+    [...p].forEach((w,i)=>{w=Number(w);if(i%2===0)rects+=`<rect x="${x}" y="0" width="${w}" height="${h}"/>`;x+=w});
+  });
+  const vb=x+quiet;
+  return `<svg class="label-bar" viewBox="0 0 ${vb} ${h}" preserveAspectRatio="none" role="img" aria-label="Código de barras ${esc(chars)}">${rects}</svg>`;
+}
+
+function shLabel(){
+  const e=ENVIOS.find(x=>x.id===LABEL);if(!e)return'';
+  return `<div class="sh-bg" data-closelabel><div class="sh" role="dialog" aria-label="Previsualizar etiqueta">
+    <div class="grab"></div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">Etiqueta del envío</div>
+      <h3>${e.id}</h3></div>
+      <button class="hd-b" data-closelabel aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      <div class="label-preview">
+        <div class="label-top"><div><div class="label-brand">Ohana Envíos</div>
+          <div class="label-code">${e.id}</div></div><div style="text-align:right;font-size:12px;font-weight:700">1 etiqueta<br>${e.paquetes.length} bulto${e.paquetes.length>1?'s':''}</div></div>
+        <div class="label-row"><b>Recibe</b><div class="label-dest">${esc(e.destinatario)}</div></div>
+        <div class="label-row"><b>Entrega</b><div>${esc(e.entrega)}</div></div>
+        <div class="label-row"><b>Retiro</b><div>${esc(e.retiro)}</div></div>
+        <div class="label-row"><b>Horario</b><div>${esc(e.ventana)}</div></div>
+        <div class="label-row"><b>Bultos</b><div>${e.paquetes.length} ${e.paquetes.length===1?'bulto':'bultos'}</div></div>
+        ${barcode128SVG(e.id)}
+        <div class="label-barcode-id">${e.id}</div>
+      </div>
+    </div>
+    <div class="sh-f"><button class="btn lg pri" id="print-label">Imprimir etiqueta</button></div>
+  </div></div>`;
+}
+
+function shCreated(){
+  const e=ENVIOS.find(x=>x.id===CREATED);if(!e)return'';
+  return `<div class="sh-bg" data-closecreated><div class="sh" role="dialog" aria-label="Envío creado">
+    <div class="grab"></div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">Envío creado</div>
+      <h3>${e.id}</h3></div>
+      <button class="hd-b" data-closecreated aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      <div class="note"><span class="ni">✓</span><div>El envío quedó pendiente y ya tiene una etiqueta asociada al pedido.</div></div>
+      <div class="panel"><dl class="kv">
+        <dt>Recibe</dt><dd>${esc(e.destinatario)}</dd>
+        <dt>Entrega</dt><dd>${esc(e.entrega)}</dd>
+        <dt>Bultos</dt><dd>${e.paquetes.length} ${e.paquetes.length===1?'bulto':'bultos'}</dd>
+        <dt>Precio</dt><dd><b>$${e.precio}</b></dd>
+      </dl></div>
+    </div>
+    <div class="sh-f"><button class="btn lg soft" data-closecreated>Cerrar</button>
+      <button class="btn lg pri" data-label="${e.id}">Imprimir etiqueta</button></div>
+  </div></div>`;
+}
+
+function shPay(){
+  const e=ENVIOS.find(x=>x.id===PAY);if(!e)return'';
+  return `<div class="sh-bg" data-closepay><div class="sh" role="dialog" aria-label="Cargar comprobante de pago">
+    <div class="grab"></div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">Comprobante de pago</div>
+      <h3>${e.id}</h3></div>
+      <button class="hd-b" data-closepay aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      <div class="panel"><dl class="kv">
+        <dt>Recibe</dt><dd>${esc(e.destinatario)}</dd>
+        <dt>Entrega</dt><dd>${esc(e.entrega)}</dd>
+        <dt>Total</dt><dd><b>$${e.precio}</b></dd>
+      </dl></div>
+      <div class="panel">
+        <div class="panel-t">Archivo</div>
+        <button class="btn soft full" id="pay-file">Seleccionar comprobante</button>
+        <span class="hint" style="display:block;margin-top:10px">PDF, JPG o PNG. En el prototipo no se sube ningún archivo real.</span>
+      </div>
+    </div>
+    <div class="sh-f"><button class="btn lg pri" id="pay-confirm">Guardar comprobante</button></div>
+  </div></div>`;
+}
+
 /* ===== render ===== */
 function render(){
   const items=NAV[ROL];
@@ -1273,43 +1475,45 @@ function render(){
   const html=(V[TAB]||vInicio)();
   $('#view').innerHTML=html;
   const dock=html.includes('class="dock"');
-  // En 'inicio' hay que poder seguir navegando; en el wizard y las tareas, la acción manda.
+  // Formularios de admin/cliente mantienen la nav como salida; tareas operativas priorizan la acción.
+  const navOverDock=dock&&['inicio','alta','nuevo','masiva'].includes(TAB);
   document.body.classList.toggle('has-dock',dock);
-  document.body.classList.toggle('dock-over',dock&&TAB==='inicio');
+  document.body.classList.toggle('dock-over',navOverDock);
   $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(PICK?shPick():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
+    (CREATED?shCreated():'')+(LABEL?shLabel():'')+(PAY?shPay():'')+
     (TOAST?`<div class="toast">${esc(TOAST)}</div>`:'');
   ['admin','cadete','cliente'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
-  document.body.style.overflow=(SEL||OP||PICK||ATRAS||CAL)?'hidden':'';
+  document.body.style.overflow=(SEL||OP||PICK||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
 }
 
 /* ===== eventos ===== */
 document.addEventListener('click',ev=>{
   const t=ev.target,c=s=>t.closest(s);
+  const closeHit=s=>{const el=c(s);return el&&(t===el||el.classList.contains('hd-b'))};
   if(c('#theme')){const r=document.documentElement;
     const dk=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme:dark)').matches);
     r.setAttribute('data-theme',dk?'light':'dark');return}
   for(const r of ['admin','cadete','cliente'])if(c('#r-'+r)){ROL=r;SEL=OP=PICK=null;DRAFT=null;
-    TAB=NAV[r][0].k;$('#scroll').scrollTop=0;render();return}
-  const tb=c('[data-tab]');if(tb){TAB=tb.dataset.tab;$('#scroll').scrollTop=0;render();return}
+    TAB=NAV[r][0].k;topPage();render();return}
+  const tb=c('[data-tab]');if(tb){TAB=tb.dataset.tab;topPage();render();return}
   const go=c('[data-go]');if(go){
     if(go.dataset.go==='incidencias'){TAB='envios';vEnvios.f='incidencia';vEnvios.q=''}
     else if(go.dataset.go==='atrasados'){TAB='envios';vEnvios.f='atrasados';vEnvios.q=''}
     else TAB=go.dataset.go;
-    $('#scroll').scrollTop=0;render();return}
+    topPage();render();return}
   const op=c('[data-open]');if(op){const e=ENVIOS.find(x=>x.id===op.dataset.open);
     if(ROL==='admin'&&e&&esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)){
       ATRAS=e.id;render();return}
     SEL=op.dataset.open;render();return}
-  if(c('[data-close]')&&!c('.sh-b')){SEL=null;render();return}
-  if(c('[data-closeop]')&&!c('.sh-b')){OP=null;render();return}
-  if(c('[data-closepick]')&&!c('.sh-b')){PICK=null;render();return}
+  if(closeHit('[data-close]')){SEL=null;render();return}
+  if(closeHit('[data-closeop]')){OP=null;render();return}
+  if(closeHit('[data-closepick]')){PICK=null;render();return}
+  if(closeHit('[data-closelabel]')){LABEL=null;render();return}
+  if(closeHit('[data-closecreated]')){CREATED=null;render();return}
+  if(closeHit('[data-closepay]')){PAY=null;render();return}
 
-  const ret=c('[data-retiro]');if(ret){OP={tipo:'retiro',envio:ret.dataset.retiro,sel:[],obs:''};SEL=null;render();return}
-  const ent=c('[data-entrega]');if(ent){OP={tipo:'entrega',envio:ent.dataset.entrega,sel:[],obs:'',receptor:''};SEL=null;render();return}
-
-  if(c('#selall')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio),r=OP.tipo==='retiro';
-    const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
-    OP.sel=OP.sel.length===el.length?[]:el.map(p=>p.id);render();return}
+  const ret=c('[data-retiro]');if(ret){OP={tipo:'retiro',envio:ret.dataset.retiro,obs:''};SEL=null;render();return}
+  const ent=c('[data-entrega]');if(ent){OP={tipo:'entrega',envio:ent.dataset.entrega,obs:'',receptor:''};SEL=null;render();return}
 
   if(c('[data-fallo]')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio);
     e.paquetes.forEach(p=>{if(['pendiente','asignado','retirado','ruta'].includes(p.estado))p.estado='incidencia'});
@@ -1322,37 +1526,37 @@ document.addEventListener('click',ev=>{
     const e=ENVIOS.find(x=>x.id===OP.envio),r=OP.tipo==='retiro';
     if(!r&&!(OP.receptor||'').trim()){OP.err='Poné el nombre de quien recibe.';render();
       setTimeout(()=>document.querySelector('#op-rec')?.focus(),60);return}
-    const tot=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado)).length;
-    OP.sel.forEach(id=>{const p=e.paquetes.find(x=>x.id===id);if(p)p.estado=r?'retirado':'entregado'});
-    const n=OP.sel.length,pc=n<tot;
+    const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
+    el.forEach(p=>p.estado=r?'retirado':'entregado');
+    const n=el.length;
     if(r){e.custodia='Martín Rodríguez';
-      e.hist.push(evt(`Retiro confirmado · ${n} de ${tot} bultos`,
-        `Custodia: remitente → Martín Rodríguez${pc?' · retiro parcial':''}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
+      e.hist.push(evt(`Retiro confirmado · ${n} bulto${n>1?'s':''}`,
+        `Custodia: remitente → Martín Rodríguez${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
     else{e.custodia=`Destinatario (${OP.receptor})`;
-      e.hist.push(evt(`Entrega confirmada · ${n} de ${tot} bultos`,
-        `Recibió: ${OP.receptor}${pc?' · entrega parcial':''}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
-    sync(e);OP=null;toast(pc?`Parcial · ${n} de ${tot} bultos`:`${r?'Retiro':'Entrega'} confirmada ✓`);return}
+      e.hist.push(evt(`Entrega confirmada · ${n} bulto${n>1?'s':''}`,
+        `Recibió: ${OP.receptor}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
+    sync(e);OP=null;toast(`${r?'Retiro':'Entrega'} confirmada ✓`);return}
 
   const add=c('[data-addto]');if(add){PICK={cadete:add.dataset.addto,sel:[]};render();return}
   if(c('#asignar-flow')){PICK={cadete:CAD.find(x=>x.disp).id,sel:[]};render();return}
   const cp=c('[data-cadpick]');if(cp&&PICK){PICK.cadete=cp.dataset.cadpick;render();return}
 
   const tp=c('[data-tipo]');if(tp&&MAS){MAS.tipo=tp.dataset.tipo;MAS.paso=1;
-    $('#scroll').scrollTop=0;render();return}
-  if(c('[data-paso0]')&&MAS){MAS.paso=0;MAS.tipo=null;MAS.err=null;$('#scroll').scrollTop=0;render();return}
+    topPage();render();return}
+  if(c('[data-paso0]')&&MAS){MAS.paso=0;MAS.tipo=null;MAS.err=null;topPage();render();return}
   const mf=c('[data-mfecha]');if(mf&&MAS){MAS.fecha=mf.dataset.mfecha;render();return}
   if(c('#m-plantilla')){toast('Plantilla descargada');return}
   if(c('#m-subir')){const m=MAS;
     if(m.tipo==='cliente'&&!m.cliente){m.err='Elegí primero de qué cliente son los envíos.';render();return}
     m.err=null;m.filas=m.tipo==='general'?PLANILLA_GRAL():PLANILLA();
-    m.excl=[];m.paso=2;$('#scroll').scrollTop=0;render();
+    m.excl=[];m.paso=2;topPage();render();
     toast(m.filas.length+' filas leídas');return}
   const ex=c('[data-excl]');if(ex&&MAS){const f=+ex.dataset.excl;
     MAS.excl=MAS.excl.includes(f)?MAS.excl.filter(x=>x!==f):[...MAS.excl,f];render();return}
   if(c('#m-restaurar')&&MAS){MAS.excl=[];render();return}
-  if(c('#m-volver')&&MAS){MAS.paso=1;$('#scroll').scrollTop=0;render();return}
-  if(c('#m-otra2')){MAS=null;$('#scroll').scrollTop=0;render();return}
-  if(c('#m-otra')){MAS=null;$('#scroll').scrollTop=0;render();return}
+  if(c('#m-volver')&&MAS){MAS.paso=1;topPage();render();return}
+  if(c('#m-otra2')){MAS=null;topPage();render();return}
+  if(c('#m-otra')){MAS=null;topPage();render();return}
   if(c('#m-confirmar')&&MAS){const m=MAS;
     const ok=m.filas.filter(r=>!r.err&&!r.dup&&!m.excl.includes(r.f));
     ok.forEach(r=>{const cli=r.cli||m.cliente;
@@ -1365,15 +1569,15 @@ document.addEventListener('click',ev=>{
       ENVIOS.unshift(e)});
     m.creados=ok.length;m.excl=[...m.excl,...m.filas.filter(r=>r.err||r.dup).map(r=>r.f)]
       .filter((v,i,a)=>a.indexOf(v)===i);
-    m.paso=3;$('#scroll').scrollTop=0;render();
+    m.paso=3;topPage();render();
     toast(ok.length+' envío'+(ok.length>1?'s':'')+' creado'+(ok.length>1?'s':''));return}
   // El día concreto gana sobre abrir el calendario: "Volver a hoy" vive dentro del mismo bloque.
-  const diaX=c('[data-dia]');if(diaX){DIA=diaX.dataset.dia;CAL=false;$('#scroll').scrollTop=0;render();return}
+  const diaX=c('[data-dia]');if(diaX){DIA=diaX.dataset.dia;CAL=false;topPage();render();return}
   if(c('#abrir-cal')){CAL=true;render();return}
-  if(c('[data-closecal]')&&!c('.sh-b')){CAL=false;render();return}
+  if(closeHit('[data-closecal]')){CAL=false;render();return}
   const fe=c('[data-fecha]');if(fe&&DRAFT){DRAFT.fecha=fe.dataset.fecha;render();return}
   const at=c('[data-atras]');if(at){ATRAS=at.dataset.atras;render();return}
-  if(c('[data-closeatras]')&&!c('.sh-b')){ATRAS=null;render();return}
+  if(closeHit('[data-closeatras]')){ATRAS=null;render();return}
   const rep=c('[data-reprog]');if(rep){const e=ENVIOS.find(x=>x.id===ATRAS);
     e.fecha=rep.dataset.reprog;e.estado='pendiente';e.cadete=null;
     e.paquetes.forEach(p=>{if(p.estado!=='entregado')p.estado='pendiente'});
@@ -1403,32 +1607,42 @@ document.addEventListener('click',ev=>{
     cd.disp=!cd.disp;render();return}
 
   const f=c('[data-f]');if(f){vEnvios.f=f.dataset.f;render();return}
+  if(c('[data-label]')){LABEL=c('[data-label]').dataset.label;CREATED=null;render();return}
+  if(c('[data-pay]')){PAY=c('[data-pay]').dataset.pay;render();return}
+  if(c('#print-label')){toast('Impresión simulada');return}
+  if(c('#pay-file')){toast('Archivo seleccionado');return}
+  if(c('#pay-confirm')){PAY=null;toast('Comprobante guardado');return}
   if(c('#f-frag')){DRAFT.fragil=!DRAFT.fragil;render();return}
   if(c('#pk-mas')){const t=DRAFT.paquetes[0].tam;
     if(DRAFT.paquetes.length<20)DRAFT.paquetes.push({tam:t});render();return}
   if(c('#pk-menos')){if(DRAFT.paquetes.length>1)DRAFT.paquetes.pop();render();return}
   const tm=c('[data-tam]');if(tm){DRAFT.paquetes.forEach(p=>p.tam=tm.dataset.tam);render();return}
-  if(c('#atras')){DRAFT.paso--;DRAFT.err={};$('#scroll').scrollTop=0;render();return}
+  if(c('#atras')){DRAFT.paso--;DRAFT.err={};topPage();render();return}
   if(c('#sig')){const d=DRAFT;d.err={};
-    if(d.paso===1){if(!d.cliente)d.err.cliente='Elegí quién envía.';if(!d.retiro)d.err.retiro='Falta la dirección de retiro.'}
-    if(d.paso===2){if(!d.dest.trim())d.err.dest='Falta quién recibe.';
-      if(!d.entrega.trim())d.err.entrega='Falta la dirección de entrega.';if(!d.ventana)d.err.ventana='Elegí un horario.'}
+    if(d.paso===1){d.retiro=d.retiro.trim();d.retiroNuevo=d.retiroNuevo.trim();
+      if(!d.cliente)d.err.cliente='Elegí quién envía.';if(!retiroDraft(d))d.err.retiro='Falta completar la dirección de retiro.'}
+    if(d.paso===2){d.entrega=entregaDraft(d);if(!d.dest.trim())d.err.dest='Falta quién recibe.';
+      if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';if(!d.ventana)d.err.ventana='Elegí un horario.'}
     if(Object.keys(d.err).length){render();return}
-    d.paso++;$('#scroll').scrollTop=0;render();return}
+    d.paso++;topPage();render();return}
   if(c('#crear')){const d=DRAFT;
-    const e=mk({cliente:d.cliente,retiro:d.retiro,destinatario:d.dest,tel:d.tel,entrega:d.entrega,
-      fecha:d.fecha,ventana:d.ventana,urgente:d.urgente,fragil:d.fragil,notas:d.notas,paquetes:d.paquetes.map(p=>({tam:p.tam}))});
-    ENVIOS.unshift(e);DRAFT=null;TAB=ROL==='cliente'?'mis':'envios';$('#scroll').scrollTop=0;
-    toast(e.id+' creado · '+e.paquetes.length+' etiqueta'+(e.paquetes.length>1?'s':'')+' ✓');return}
+    const cl=CLI.find(x=>x.n===d.cliente),retiro=retiroDraft(d);
+    if(cl&&d.favRetiro&&retiro&&!cl.dirs.some(x=>x.toLowerCase()===retiro.toLowerCase()))cl.dirs.push(retiro);
+    const e=mk({cliente:d.cliente,retiro:retiro,destinatario:d.dest,tel:d.tel,entrega:entregaDraft(d),
+      fecha:d.fecha,ventana:d.ventana,zona:d.zona,precio:precioZona(d.zona),
+      urgente:d.urgente,fragil:d.fragil,notas:d.notas,paquetes:d.paquetes.map(p=>({tam:p.tam}))});
+    ENVIOS.unshift(e);DRAFT=null;TAB=ROL==='cliente'?'mis':'envios';CREATED=e.id;topPage();render();return}
 });
 
 document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='m-cli'&&MAS){MAS.cliente=t.value;MAS.err=null;render();return}
-  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';render();return}
-  if(t.id==='f-ret'){DRAFT.retiro=t.value;return}
+  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;render();return}
+  if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
+  if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
+  if(t.id==='f-zona'){DRAFT.zona=t.value;DRAFT.fecha=jornadasZona(DRAFT.zona)[0];DRAFT.err.entrega=null;render();return}
+  if(t.id==='f-ent-loc'){DRAFT.entregaCosta.loc=t.value;DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ven'){DRAFT.ventana=t.value;return}
   if(t.id==='f-urg'){DRAFT.urgente=!!t.value;return}
-  if(t.dataset.pk&&OP){OP.sel=t.checked?[...OP.sel,t.dataset.pk]:OP.sel.filter(x=>x!==t.dataset.pk);render();return}
   if(t.dataset.pick&&PICK){PICK.sel=t.checked?[...PICK.sel,t.dataset.pick]:PICK.sel.filter(x=>x!==t.dataset.pick);render();return}
 });
 
@@ -1436,8 +1650,14 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){vEnvios.q=t.value;const p=t.selectionStart;render();
     const n=document.querySelector('#q');if(n){n.focus();n.setSelectionRange(p,p)}return}
   if(t.id==='f-dest')DRAFT.dest=t.value;
+  if(t.id==='f-ret-new'){DRAFT.retiroNuevo=t.value;DRAFT.err.retiro=null}
   if(t.id==='f-tel')DRAFT.tel=t.value;
-  if(t.id==='f-ent')DRAFT.entrega=t.value;
+  if(t.id==='f-ent'){DRAFT.entrega=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-ent-otra'){DRAFT.entregaCosta.otra=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-ent-calle'){DRAFT.entregaCosta.calle=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-ent-manzana'){DRAFT.entregaCosta.manzana=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-ent-solar'){DRAFT.entregaCosta.solar=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-ent-desc'){DRAFT.entregaCosta.desc=t.value;DRAFT.err.entrega=null}
   if(t.id==='f-not')DRAFT.notas=t.value;
   if(t.id==='op-obs'&&OP)OP.obs=t.value;
   if(t.id==='op-rec'&&OP){OP.receptor=t.value;OP.err=null}
