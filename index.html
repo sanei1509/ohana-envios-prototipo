@@ -159,6 +159,9 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 /* ===== hero card ===== */
 .hero{background:linear-gradient(135deg,var(--solid) 0%,var(--solid-2) 100%);
   border-radius:var(--r);padding:20px;color:var(--on-solid);position:relative;overflow:hidden;box-shadow:var(--sh-md)}
+.hero-btn{display:block;width:100%;text-align:left}
+.hero-btn:active{transform:scale(.99)}
+.hero-btn:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
 .hero::after{content:"";position:absolute;right:-32px;top:-32px;width:150px;height:150px;
   border-radius:50%;background:rgba(255,255,255,.09)}
 .hero-k{font-size:12px;font-weight:700;opacity:.85;letter-spacing:.04em;text-transform:uppercase}
@@ -510,10 +513,51 @@ button.otrodia:active{transform:scale(.99)}
 .chipa{display:flex;align-items:center;gap:11px;background:var(--soft);border-radius:var(--r-sm);
   padding:11px 13px;font-size:14px;min-height:46px}
 .chipa .cc{font-size:12px;color:var(--brand);font-weight:800;flex:none;font-variant-numeric:tabular-nums}
-.chipa .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.chipa .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600;line-height:1.35}
 .chipa .x{width:34px;height:34px;display:grid;place-items:center;color:var(--ink-3);
   font-size:19px;font-weight:700;flex:none;margin:-6px -6px -6px 0;border-radius:10px}
-
+.route-out{display:flex;flex-direction:column;gap:8px;margin-top:12px;background:var(--soft);
+  border-radius:var(--r-sm);padding:12px}
+.route-out.updating{pointer-events:none}
+.route-out .panel-t{margin-bottom:2px}
+.route-step{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;font-size:13px;line-height:1.35;text-align:left}
+.route-step.has-actions{grid-template-columns:28px 1fr 66px}
+.route-step[data-routeenv]{cursor:pointer}
+.route-step .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:var(--card);color:var(--brand);font-size:11px;font-weight:800}
+.route-step b{font-size:12.5px;color:var(--ink);display:block}
+.route-step small{color:var(--ink-3);font-weight:600}
+.route-step.done{opacity:.58}
+.route-step.current{background:var(--brand-soft);border-radius:12px;padding:8px;margin:-8px}
+.route-state{display:inline-flex;margin-left:6px;padding:2px 7px;border-radius:999px;background:var(--card);
+  color:var(--ink-3);font-size:10.5px;font-weight:850;text-transform:uppercase}
+.route-id{display:inline-flex;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--brand);
+  color:var(--on-solid);font-size:10.5px;font-weight:900;font-variant-numeric:tabular-nums}
+.route-progress{font-size:12.5px;color:var(--ink-3);font-weight:700;line-height:1.35;margin:-2px 0 4px}
+.route-actions{display:flex;gap:6px;justify-content:flex-end}
+.route-actions button{width:28px;height:28px;border-radius:9px;background:var(--card);color:var(--ink-2);
+  font-weight:900;display:grid;place-items:center}
+.route-actions button:disabled{opacity:.35;cursor:default}
+.jday{display:flex;flex-direction:column;gap:10px}
+.jday-cad{background:var(--card);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh)}
+.jday-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.jday-av{width:42px;height:42px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:20px}
+.jday-m{flex:1;min-width:0}
+.jday-n{font-weight:800;font-size:16px;letter-spacing:-.015em}
+.jday-s{font-size:12.5px;color:var(--ink-3);font-weight:700;margin-top:2px}
+.jday-list{display:flex;flex-direction:column;gap:8px}
+.jday-env{background:var(--soft);border-radius:var(--r-sm);padding:12px;display:grid;gap:7px;border:2px solid transparent;text-align:left}
+.jday-env.hl{border-color:var(--brand);background:var(--brand-soft);animation:glow .9s ease}
+@keyframes glow{0%{transform:scale(.99)}50%{transform:scale(1.012)}100%{transform:scale(1)}}
+.jday-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.jday-title{font-size:14.5px;font-weight:800;line-height:1.25}
+.jday-id{font-size:14px;font-weight:900;color:var(--brand);font-variant-numeric:tabular-nums;flex:none;
+  background:var(--card);border-radius:999px;padding:4px 9px}
+.jday-meta{font-size:12.5px;color:var(--ink-3);font-weight:650;line-height:1.35}
+.jday-stops{display:grid;gap:5px;font-size:13px;line-height:1.35}
+.jday-stops b{color:var(--ink)}
+.jday-actions{display:flex;gap:8px;flex-wrap:wrap}
+.jday-actions .btn{min-height:34px;padding:0 12px;font-size:12.5px}
 /* ===== sheet ===== */
 .sh-bg{position:fixed;inset:0;background:rgba(14,22,19,.5);z-index:80;display:flex;
   align-items:flex-end;justify-content:center;animation:fade .18s ease;backdrop-filter:blur(3px)}
@@ -613,6 +657,11 @@ const diasCosta=f=>{const[y,m,d]=f.split('-').map(Number);return [1,3,5].include
 const jornadasZona=z=>z==='costa'?JORNADAS.filter(diasCosta):JORNADAS;
 const precioZona=z=>(ZONAS[z]||ZONAS.mvd).precio;
 const nombreZona=z=>(ZONAS[z]||ZONAS.mvd).l;
+const FRANJAS=['09:00–12:00','10:00–13:00','14:00–18:00','15:00–19:00'];
+function finFranja(v){const h=(v.split('–')[1]||'').split(':').map(Number);return h[0]*60+h[1]}
+function minutosAhora(){const d=new Date();return d.getHours()*60+d.getMinutes()}
+function franjaVigente(v,fecha){return fecha!==HOY||finFranja(v)>minutosAhora()}
+function franjasDisponibles(fecha){return FRANJAS.filter(v=>franjaVigente(v,fecha))}
 function labelDia(f){
   const [y,m,dd]=f.split('-').map(Number), d=new Date(y,m-1,dd);
   const hoyD=new Date(); hoyD.setHours(0,0,0,0);
@@ -634,9 +683,9 @@ const ES={pendiente:{l:'Pendiente',c:'p-pend'},asignado:{l:'Asignado',c:'p-asig'
   parcial:{l:'Parcial',c:'p-parc'},incidencia:{l:'Incidencia',c:'p-inc'},cancelado:{l:'Cancelado',c:'p-pend'}};
 const pill=e=>`<span class="pill ${ES[e].c}"><i class="dot"></i>${ES[e].l}</span>`;
 
-const CAD=[{id:'c1',n:'Martín Rodríguez',v:'Moto',ic:'🛵',disp:true},
-  {id:'c2',n:'Pedro Suárez',v:'Auto',ic:'🚗',disp:true},
-  {id:'c3',n:'Juan Pereyra',v:'Camioneta',ic:'🚚',disp:false}];
+const CAD=[{id:'c1',n:'Martín Rodríguez',v:'Moto',ic:'🛵',disp:true,base:'Bulevar Artigas 1825, Tres Cruces'},
+  {id:'c2',n:'Pedro Suárez',v:'Auto',ic:'🚗',disp:true,base:'Av. Italia 6201, Carrasco'},
+  {id:'c3',n:'Juan Pereyra',v:'Camioneta',ic:'🚚',disp:false,base:'Camino Carrasco 4680, Malvín Norte'}];
 const CLI=[{id:'cl1',n:'Boutique Amalia',tel:'099 123 456',dirs:['Av. Rivera 2456, Pocitos','Br. España 2100, Pocitos']},
   {id:'cl2',n:'Tienda Nube MVD',tel:'098 777 321',dirs:['Av. Brasil 1900, Pocitos']},
   {id:'cl3',n:'Farmacia del Centro',tel:'097 555 010',dirs:['18 de Julio 1420, Centro']}];
@@ -658,8 +707,17 @@ let ENVIOS=[
     hist:[evt('Envío registrado','Estado pendiente · custodia del remitente','Admin'),
       evt('Asignado a Martín Rodríguez','Responsabilidad operativa · la custodia no cambia','Admin')]}),
   mk({cliente:'Tienda Nube MVD',retiro:'Av. Brasil 1900, Pocitos',destinatario:'Diego Martínez',
-    tel:'098 111 222',entrega:'Bvar. Artigas 1200, Cordón',fecha:JORNADAS[1],ventana:'14:00–18:00',estado:'pendiente',
+    tel:'098 111 222',entrega:'Bvar. Artigas 1200, Cordón',fecha:JORNADAS[0],ventana:'14:00–18:00',estado:'pendiente',
     paquetes:[{tam:'S'}]}),
+  mk({cliente:'Boutique Amalia',retiro:'Av. Rivera 2456, Pocitos',destinatario:'Valeria Castro',
+    tel:'099 887 112',entrega:'Av. Brasil 2745, Pocitos',fecha:JORNADAS[0],ventana:'09:00–12:00',
+    estado:'pendiente',paquetes:[{tam:'S'}]}),
+  mk({cliente:'Farmacia del Centro',retiro:'18 de Julio 1420, Centro',destinatario:'Camila Ferrés',
+    tel:'094 220 118',entrega:'Av. Italia 2890, Malvín',fecha:JORNADAS[0],ventana:'10:00–13:00',
+    estado:'pendiente',fragil:true,paquetes:[{tam:'M'},{tam:'S'}]}),
+  mk({cliente:'Tienda Nube MVD',retiro:'Av. Brasil 1900, Pocitos',destinatario:'Joaquín Ramos',
+    tel:'092 771 043',entrega:'Av. Rivera 3901, Pocitos',fecha:JORNADAS[0],ventana:'15:00–19:00',
+    estado:'pendiente',urgente:true,paquetes:[{tam:'M'}]}),
   mk({cliente:'Farmacia del Centro',retiro:'18 de Julio 1420, Centro',destinatario:'Ana Silva',
     tel:'097 333 444',entrega:'Rbla. Rep. del Perú 700, Pocitos',fecha:JORNADAS[0],ventana:'09:00–12:00',
     estado:'retirado',cadete:'c1',custodia:'Martín Rodríguez',fragil:true,
@@ -686,8 +744,10 @@ let ENVIOS=[
       evt('Entrega no concretada','Destinatario ausente · reprogramar','Pedro S.')]})
 ];
 
-let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null;
+let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null,ROUTED=false,JORNADA=false,MOVE=null,JFILT='todos';
 let DIA=JORNADAS[0],ATRAS=null,CAL=false;
+let ROUTE_PLAN={c1:[],c2:[],c3:[]};
+let ROUTE_STOPS={c1:[],c2:[],c3:[]};
 let MAS=null; // {paso, cliente, filas[], excluidas[]}
 
 /* Filas que simulan la lectura de una planilla. Incluyen casos inválidos
@@ -743,6 +803,13 @@ const cadIc=id=>(CAD.find(c=>c.id===id)||{}).ic||'◉';
 const LOC_COSTA=['Solymar','Shangrilá','Otra'];
 function topPage(){window.scrollTo({top:0,left:0,behavior:'auto'})}
 function toast(m){TOAST=m;render();clearTimeout(toast._t);toast._t=setTimeout(()=>{TOAST=null;render()},2800)}
+function flashToast(m){
+  TOAST=m;
+  const layer=$('#layer');
+  if(layer&&!layer.querySelector('.toast'))layer.insertAdjacentHTML('beforeend',`<div class="toast">${esc(m)}</div>`);
+  clearTimeout(flashToast._t);
+  flashToast._t=setTimeout(()=>{TOAST=null;document.querySelector('.toast')?.remove()},1800);
+}
 function retiroDraft(d){
   return (d.retiroNuevo||d.retiro||'').trim();
 }
@@ -764,6 +831,12 @@ function sync(e){const{t,d}=bul(e);
 function progHTML(e){const b=bul(e);
   return `<span class="meta pkg-count">▦ ${b.t} bulto${b.t>1?'s':''}</span>`}
 const icFor=e=>e.estado==='entregado'?'✓':e.estado==='incidencia'?'!':e.urgente?'⚡':'▣';
+const lastEvt=e=>e.hist?.[e.hist.length-1]||evt('Sin actividad','', 'Ohana');
+const actividadLabel=e=>{
+  const h=lastEvt(e),t=h.t||'';
+  if(e.cadete&&t.includes(cadN(e.cadete)))return t.replace(' a '+cadN(e.cadete),'').trim();
+  return t;
+};
 
 /* ===== vistas ===== */
 function vInicio(){
@@ -779,6 +852,10 @@ function vInicio(){
   const cuenta=f=>ENVIOS.filter(e=>e.fecha===f&&e.estado==='pendiente').length;
   const esHoy=DIA===HOY;
   const futuros=JORNADAS.slice(1).reduce((a,f)=>a+cuenta(f),0);
+  const hayRutaRecibida=CAD.some(c=>(ROUTE_PLAN[c.id]||[]).some(id=>{
+    const e=ENVIOS.find(x=>x.id===id);return e&&e.fecha===DIA&&!['cancelado'].includes(e.estado);
+  }));
+  const recientes=ENVIOS.slice().sort((a,b)=>(lastEvt(b).ts||'').localeCompare(lastEvt(a).ts||'')).slice(0,3);
   return `${esHoy?`<button class="otrodia" id="abrir-cal">
       <span class="od-i">▤</span>
       <span class="od-t">Planificar otro día</span>
@@ -794,12 +871,22 @@ function vInicio(){
     <span class="al-m"><span class="al-t">${atrasados.length} envío${atrasados.length>1?'s':''} de días anteriores</span>
       <span class="al-s">Sin resolver. Reprogramá o devolvé al remitente.</span></span>
     <span class="chev">›</span></button>`:''}
-  ${pend.length?`<div class="hero"><div class="hero-k">${labelDia(DIA)} · pendientes de asignar</div>
+  ${pend.length&&hayRutaRecibida?`<div class="hero"><div class="hero-k">${labelDia(DIA)} · jornada armada</div>
+    <h4>${pend.length} envío${pend.length>1?'s':''} nuevo${pend.length>1?'s':''} sin ruta</h4>
+    <p>La jornada ya tiene rutas recibidas. Entrá para agregarlo manualmente a un cadete.</p>
+    <button class="cta" data-jornada>Ver rutas y agregar envío →</button></div>`:
+    pend.length?`<div class="hero"><div class="hero-k">${labelDia(DIA)} · pendientes de asignar</div>
     <h4>${pend.length} envío${pend.length>1?'s':''} esperando</h4>
     <p>${pend.reduce((s,e)=>s+e.paquetes.length,0)} bultos sin cadete asignado.</p>
-    <button class="cta" id="asignar-flow">Asignar ahora →</button></div>`:
-    `<div class="hero"><div class="hero-k">${labelDia(DIA)} · ${numDia(DIA)}</div><h4>Jornada organizada</h4>
-    <p>No quedan envíos sin asignar para este día.</p></div>`}
+    <button class="cta" id="optimizar-rutas">Enviar a ruteador externo →</button>
+    <button class="btn sm soft full" id="asignar-flow" style="margin-top:10px">Asignar manualmente</button></div>`:
+    esHoy&&futuros?`<div class="hero"><div class="hero-k">Hoy · ${numDia(DIA)}</div><h4>Hoy está organizado</h4>
+    <p>Hay ${futuros} envío${futuros>1?'s':''} sin asignar para próximas jornadas.</p>
+    <button class="cta" id="abrir-cal">Ver próximas jornadas →</button>
+    <button class="btn sm soft full" data-jornada style="margin-top:10px">Ver jornada armada</button></div>`:
+    `<button class="hero hero-btn" data-jornada aria-label="Ver jornada armada del ${labelDia(DIA)} ${numDia(DIA)}"><div class="hero-k">${labelDia(DIA)} · ${numDia(DIA)}</div><h4>Jornada organizada</h4>
+    <p>No quedan envíos sin asignar para este día.</p>
+    <p style="margin-top:10px;font-weight:800">Tocá acá para ver la jornada armada →</p></button>`}
   <div class="sec"><div class="sec-h"><h3>Accesos rápidos</h3></div>
     <div class="tiles">
       <button class="tile" data-go="alta"><span class="icw"><span class="ic" style="background:var(--brand-soft)">＋</span></span><span class="lb">Nuevo envío</span></button>
@@ -822,7 +909,7 @@ function vInicio(){
       Confirmar ${Object.values(PLANI).flat().length} asignación${Object.values(PLANI).flat().length>1?'es':''}</button></div></div>`:''}
   <div class="sec"><div class="sec-h"><h3>Actividad reciente</h3>
     <button class="more" data-go="envios">Ver todo</button></div>
-    ${ENVIOS.slice(0,3).map(e=>ecCard(e)).join('')}</div>`;
+    ${recientes.map(e=>ecCard(e,'actividad')).join('')}</div>`;
 }
 
 function cdCard(c){
@@ -835,25 +922,158 @@ function cdCard(c){
       <div class="cd-v">${c.v}${yaTiene?` · ${yaTiene} envío${yaTiene>1?'s':''} en curso`:''}</div></div>
     ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Disponible</span>':'<span class="pill p-pend"><i class="dot"></i>No disponible</span>'}</div>
     <div class="cd-v" style="margin-top:4px"><b style="color:var(--brand-ink)">+${asg.length} envío${asg.length>1?'s':''}</b> · ${nb} bulto${nb>1?'s':''} en este borrador</div>
+    ${ROUTED&&asg.length?externalRouteList(asg,c.id):''}
     ${asg.length?`<div class="assigned">${asg.map(id=>{const e=ENVIOS.find(x=>x.id===id);
       return `<div class="chipa"><span class="cc">${id}</span>
-        <span class="nm">${esc(e.destinatario)} · ${e.paquetes.length}b</span>
+        <span class="nm">${esc(e.destinatario)} · ${e.paquetes.length}b<br><span class="hint">Retiro: ${esc(e.retiro)}<br>Entrega: ${esc(e.entrega)}</span></span>
         <button class="x" data-unassign="${id}" aria-label="Quitar">×</button></div>`}).join('')}</div>`:''}
     ${c.disp?`<button class="btn sm soft full" style="margin-top:12px" data-addto="${c.id}">+ Agregar envíos</button>`:''}
   </div>`;
+}
+
+function routeSteps(envs){
+  const steps=[];
+  envs.forEach((e,i)=>{
+    steps.push({tipo:'R',k:'Retirar',who:e.cliente,addr:e.retiro,id:e.id});
+    if(i>0){const prev=envs[i-1];steps.push({tipo:'D',k:'Entregar',prep:'a',who:prev.destinatario,addr:prev.entrega,id:prev.id})}
+  });
+  if(envs.length){const last=envs[envs.length-1];steps.push({tipo:'D',k:'Entregar',prep:'a',who:last.destinatario,addr:last.entrega,id:last.id})}
+  return steps;
+}
+
+function stopKey(s){return s.tipo+':'+s.id}
+function stopFromKey(k){
+  const [tipo,id]=k.split(':');
+  if(tipo==='S'){
+    const c=CAD.find(x=>x.id===id);
+    return c?{tipo,k:'Origen',who:'',addr:c.base,id:c.id}:null;
+  }
+  const e=ENVIOS.find(x=>x.id===id);
+  if(!e)return null;
+  return tipo==='R'
+    ?{tipo,k:'Retirar',who:e.cliente,addr:e.retiro,id:e.id}
+    :{tipo,k:'Entregar',prep:'a',who:e.destinatario,addr:e.entrega,id:e.id};
+}
+function routeKeysForEnvios(envs,cid=null){return [...(cid?['S:'+cid]:[]),...routeSteps(envs).map(stopKey)]}
+function stopDone(s){
+  if(s.tipo==='S')return true;
+  const e=ENVIOS.find(x=>x.id===s.id);
+  if(!e)return true;
+  return s.tipo==='R'
+    ?['retirado','ruta','parcial','entregado'].includes(e.estado)
+    :e.estado==='entregado';
+}
+function envioMovible(id){
+  return !Object.values(ROUTE_STOPS).flat().map(stopFromKey).filter(Boolean)
+    .some(s=>s.id===id&&stopDone(s));
+}
+function syncRouteStops(cid,envs){
+  const wanted=routeKeysForEnvios(envs,cid),actual=ROUTE_STOPS[cid]||[];
+  const merged=[...actual.filter(k=>wanted.includes(k)),...wanted.filter(k=>!actual.includes(k))];
+  const done=[],future=[];
+  merged.forEach(k=>{
+    const s=stopFromKey(k);
+    (s&&stopDone(s)?done:future).push(k);
+  });
+  ROUTE_STOPS[cid]=[...done,...future];
+  return ROUTE_STOPS[cid];
+}
+
+function routeListHTML(envs,title='Orden devuelto por ruteador externo',cid=null,editable=false){
+  const steps=(cid?syncRouteStops(cid,envs).map(stopFromKey).filter(Boolean):routeSteps(envs));
+  const done=steps.map(stopDone),current=done.findIndex(x=>!x);
+  const currentStep=current>=0?steps[current]:null;
+  return `<div class="route-out"><div class="panel-t">${esc(title)}</div>
+    ${editable?`<div class="route-progress">${currentStep
+      ?`Va por parada ${current+1}: ${currentStep.k.toLowerCase()} en ${esc(currentStep.who)}`
+      :'Ruta completada'}</div>`:''}
+    ${steps.map((s,i)=>{
+      const locked=editable&&(current<0||i<=current),state=s.tipo==='S'?'Origen':done[i]?'Completada':i===current?'Siguiente':'Futura';
+      const title=s.tipo==='S'?'Origen':`${s.k} ${s.prep||'en'} ${esc(s.who)}`;
+      return `<div class="route-step ${editable?'has-actions':''} ${done[i]?'done':i===current?'current':''}" data-stop="${stopKey(s)}" ${s.tipo==='S'?'':'data-routeenv="'+s.id+'"'}><span class="num">${i+1}</span>
+      <div><b>${title}${s.tipo==='S'||done[i]||i===current?`<span class="route-state">${state}</span>`:`<span class="route-id">${s.id}</span>`}</b><small>${esc(s.addr)}</small></div>
+      ${editable?`<div class="route-actions">
+        <button data-moverstop="${cid}|${i}|-1" ${locked||i===0||i-1<=current?'disabled':''} aria-label="Subir parada">↑</button>
+        <button data-moverstop="${cid}|${i}|1" ${locked||i===steps.length-1?'disabled':''} aria-label="Bajar parada">↓</button>
+      </div>`:''}</div>`}).join('')}
+  </div>`;
+}
+
+function externalRouteList(ids,cid=null){
+  const envs=ids.map(id=>ENVIOS.find(e=>e.id===id)).filter(Boolean);
+  return routeListHTML(envs,'Orden devuelto por ruteador externo',cid);
+}
+
+function simularRuteadorExterno(){
+  const enP=Object.values(PLANI).flat();
+  const pendientes=ENVIOS.filter(e=>e.estado==='pendiente'&&!enP.includes(e.id)
+    &&(e.fecha===DIA||(DIA===HOY&&esPasado(e.fecha))))
+    .sort((a,b)=>(a.ventana||'').localeCompare(b.ventana||'')||a.entrega.localeCompare(b.entrega));
+  const cadetes=CAD.filter(c=>c.disp);
+  if(!pendientes.length){toast('No hay envíos para optimizar');return}
+  if(!cadetes.length){toast('No hay cadetes disponibles');return}
+  PLANI={c1:[...(PLANI.c1||[])],c2:[...(PLANI.c2||[])],c3:[...(PLANI.c3||[])]};
+  pendientes.forEach((e,i)=>PLANI[cadetes[i%cadetes.length].id].push(e.id));
+  ROUTE_PLAN={c1:[...PLANI.c1],c2:[...PLANI.c2],c3:[...PLANI.c3]};
+  ROUTE_STOPS={c1:[],c2:[],c3:[]};
+  ROUTED=true;PICK=null;toast('Ruteador externo devolvió '+pendientes.length+' envío'+(pendientes.length>1?'s':'')+' por cadete');
+}
+
+function enviosCadeteOrdenados(cid){
+  const envs=ENVIOS.filter(e=>e.cadete===cid&&!['entregado','cancelado'].includes(e.estado));
+  if(!envs.length)return[];
+  const keys=syncRouteStops(cid,envs);
+  const nextKey=e=>(e.estado==='asignado'?'R':'D')+':'+e.id;
+  return envs.slice().sort((a,b)=>{
+    const ia=keys.indexOf(nextKey(a)),ib=keys.indexOf(nextKey(b));
+    if(ia!==ib)return (ia<0?999:ia)-(ib<0?999:ib);
+    return (a.ventana||'').localeCompare(b.ventana||'')||a.id.localeCompare(b.id);
+  });
+}
+
+function refreshRouteList(routeEl,cid){
+  if(!routeEl)return false;
+  const before=new Map([...routeEl.querySelectorAll('.route-step')]
+    .map(el=>[el.dataset.stop,el.getBoundingClientRect()]));
+  const g=enviosJornadaPorCadete().find(x=>x.cadete.id===cid);
+  if(!g)return false;
+  const title=routeEl.querySelector('.panel-t')?.textContent||('Ruta armada para '+cadN(cid));
+  const wrap=document.createElement('div');
+  wrap.innerHTML=routeListHTML(g.envs,title,cid,true);
+  const next=wrap.firstElementChild;
+  next.classList.add('updating');
+  routeEl.replaceWith(next);
+  requestAnimationFrame(()=>{
+    next.querySelectorAll('.route-step').forEach(el=>{
+      const prev=before.get(el.dataset.stop);
+      if(!prev)return;
+      const now=el.getBoundingClientRect(),dy=prev.top-now.top;
+      if(dy)el.animate([{transform:`translateY(${dy}px)`},{transform:'translateY(0)'}],
+        {duration:210,easing:'cubic-bezier(.2,.8,.2,1)'});
+    });
+    setTimeout(()=>next.classList.remove('updating'),230);
+  });
+  return true;
 }
 
 function ecCard(e,mode){
   const b=bul(e),r=e.estado==='asignado';
   const icbg=e.estado==='entregado'?'var(--ok-soft)':e.estado==='incidencia'?'var(--bad-soft)':
     e.urgente?'var(--bad-soft)':'var(--soft)';
+  const cad=e.cadete&&['asignado','retirado','ruta','parcial'].includes(e.estado)
+    ?`<span class="meta">◉ ${esc(cadN(e.cadete))}</span>`:'';
+  const sinCad=!e.cadete&&e.estado==='pendiente'?'<span class="meta">Sin asignar</span>':'';
+  const actividad=mode==='actividad',h=actividad?lastEvt(e):null;
+  const subt=actividad
+    ?`${esc(e.cliente)} · ${esc(actividadLabel(e))}`
+    :esc(mode==='tarea'?(r?e.retiro:e.entrega):e.entrega);
   const inner=`<div class="ec-top">
     <span class="ec-ic" style="background:${icbg}">${mode==='tarea'?(r?'↑':'↓'):icFor(e)}</span>
     <div class="ec-m"><div class="ec-n">${mode==='tarea'?(r?'Retirar de ':'Entregar a ')+esc(r?e.cliente:e.destinatario):esc(e.destinatario)}</div>
-      <div class="ec-a">${esc(mode==='tarea'?(r?e.retiro:e.entrega):e.entrega)}</div></div>
+      <div class="ec-a">${subt}</div></div>
     <span class="ec-code">${e.id}</span></div>
   <div class="ec-bot">${pill(e.estado)}${e.urgente?'<span class="urg">URGENTE</span>':''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}
-    ${progHTML(e)}<span class="meta" style="margin-left:auto">◔ ${e.ventana}</span></div>`;
+    ${progHTML(e)}${cad}${sinCad}<span class="meta" style="margin-left:auto">◔ ${actividad?fch(h.ts)+' '+hhmm(h.ts):e.ventana}</span></div>`;
   const card=`<button class="ec" data-open="${e.id}">${inner}</button>`;
   const puedeImprimir=mode==='cliente'&&['pendiente','asignado'].includes(e.estado);
   if(mode==='cliente'){
@@ -890,6 +1110,7 @@ function vAlta(){
     dest:'',tel:'',entregaCosta:{loc:'Solymar',otra:'',calle:'',manzana:'',solar:'',desc:''},
     entrega:'',zona:'mvd',fecha:JORNADAS[0],ventana:'',notas:'',urgente:false,fragil:false,
     favRetiro:false,paquetes:[{tam:'M'}],err:{}});
+  const frDisp=franjasDisponibles(d.fecha);
   const ps=['Cliente','Destino','Bultos','Revisar'];
   let b='';
   if(d.paso===1){const cl=CLI.find(c=>c.n===d.cliente);
@@ -953,7 +1174,8 @@ function vAlta(){
       </div>
       <div class="field"><label for="f-ven">¿En qué horario?</label>
       <select id="f-ven"><option value="">Elegí una franja…</option>
-      ${['09:00–12:00','10:00–13:00','14:00–18:00','15:00–19:00'].map(v=>`<option ${d.ventana===v?'selected':''}>${v}</option>`).join('')}</select>
+      ${frDisp.map(v=>`<option ${d.ventana===v?'selected':''}>${v}</option>`).join('')}</select>
+      ${!frDisp.length?`<div class="err">⚠ No quedan franjas disponibles para hoy. Elegí otro día.</div>`:''}
       ${d.err.ventana?`<div class="err">⚠ ${d.err.ventana}</div>`:''}</div>
       <div class="field"><label for="f-urg">¿Es urgente?</label>
       <select id="f-urg"><option value="">No, normal</option><option value="1" ${d.urgente?'selected':''}>Sí, urgente</option></select></div>
@@ -1101,9 +1323,9 @@ function vMasiva(){
 
 function vCadetes(){
   return `<div class="sec">${CAD.map(c=>{
-    const act=ENVIOS.filter(e=>e.cadete===c.id&&!['entregado','cancelado'].includes(e.estado)).length;
-    const bl=ENVIOS.filter(e=>e.cadete===c.id&&!['entregado','cancelado'].includes(e.estado))
-      .reduce((s,e)=>s+e.paquetes.length,0);
+    const activos=ENVIOS.filter(e=>e.cadete===c.id&&!['entregado','cancelado'].includes(e.estado));
+    const act=activos.length;
+    const bl=activos.reduce((s,e)=>s+e.paquetes.length,0);
 
     return `<div class="cd ${c.disp?'':'off'}"><div class="cd-h">
       <div class="cd-av">${c.ic}</div>
@@ -1111,19 +1333,16 @@ function vCadetes(){
         <div class="cd-v">${c.v} · ${act} tarea${act===1?'':'s'} activa${act===1?'':'s'}</div></div>
       ${c.disp?'<span class="pill p-ent"><i class="dot"></i>Disponible</span>':'<span class="pill p-pend"><i class="dot"></i>No disponible</span>'}</div>
       <div class="cd-v" style="margin-top:2px">${act?`${bl} bulto${bl>1?'s':''} en mano`:'Sin envíos asignados'}</div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label for="base-${c.id}">Punto de partida</label>
+        <input id="base-${c.id}" data-base="${c.id}" value="${esc(c.base)}" placeholder="Dirección desde donde sale">
+        <span class="hint" style="display:block;margin-top:7px">Se manda al ruteador externo como primera parada de este cadete.</span></div>
       <button class="btn sm soft full" style="margin-top:13px" data-toggle="${c.id}">
         ${c.disp?'Marcar no disponible':'Marcar disponible'}</button></div>`}).join('')}</div>
   <div class="note"><span class="ni">💡</span><div>Si un cadete tiene tareas activas, primero hay que reasignarlas antes de marcarlo ocupado.</div></div>`;
 }
 
 function vTareas(){
-  const m=ENVIOS.filter(e=>e.cadete==='c1'&&!['entregado','cancelado'].includes(e.estado))
-    .sort((a,b)=>{
-      const pa=a.estado==='asignado'?0:1,pb=b.estado==='asignado'?0:1;
-      if(pa!==pb)return pa-pb;
-      const ta=new Date(a.hist.at(-1)?.ts||0),tb=new Date(b.hist.at(-1)?.ts||0);
-      return ta-tb;
-    });
+  const m=enviosCadeteOrdenados('c1');
   const px=m[0],r=px&&px.estado==='asignado';
   return `${px?`<div class="bignext"><div class="bt">
       <div class="act">${r?'↑ Próximo retiro':'↓ Próxima entrega'}</div>
@@ -1139,6 +1358,8 @@ function vTareas(){
         ${px.urgente?'<span class="urg">⚡ URGENTE</span>':''}
         ${px.fragil?'<span class="frag">◆ FRÁGIL · manejar con cuidado</span>':''}</div>`:''}
     </div></div>`:''}
+  ${m.length?`<div class="sec"><div class="sec-h"><h3>Ruta asignada</h3><span class="more">${routeSteps(m).length}</span></div>
+    ${routeListHTML(m,'Orden de paradas','c1')}</div>`:''}
   <div class="sec"><div class="sec-h"><h3>Todas tus paradas</h3><span class="more">${m.length}</span></div>
     ${m.length?m.map(e=>ecCard(e,'tarea')).join(''):
       '<div class="empty"><div class="ic">🎉</div><p>Terminaste por hoy</p><small>No te quedan paradas pendientes.</small></div>'}</div>
@@ -1274,11 +1495,13 @@ function shPick(){
   const selBultos=PICK.sel.reduce((s,i)=>s+(ENVIOS.find(e=>e.id===i)?.paquetes.length||0),0);
   return `<div class="sh-bg" data-closepick><div class="sh" role="dialog">
     <div class="grab"></div>
-    <div class="sh-h"><div><div class="hint" style="font-weight:700">Asignar envíos a</div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">${PICK.direct?'Insertar en ruta':'Asignar envíos a'}</div>
       <h3>${c.ic} ${esc(c.n)}</h3></div>
       <button class="hd-b" data-closepick aria-label="Cerrar">×</button></div>
     <div class="sh-b">
-      ${libres.length>1?`<div class="cadpick">${libres.map(x=>`
+      ${PICK.direct?`<div class="note" style="margin-bottom:14px"><span class="ni">＋</span>
+        <div>El envío queda asignado a ${esc(c.n)} y se agrega al final de las paradas futuras. Después podés moverlo dentro de la ruta.</div></div>`:''}
+      ${!PICK.direct&&libres.length>1?`<div class="cadpick">${libres.map(x=>`
         <button class="cp ${x.id===PICK.cadete?'on':''}" data-cadpick="${x.id}">
           <span class="cp-ic">${x.ic}</span>
           <span class="cp-n">${esc(x.n.split(' ')[0])}</span>
@@ -1292,7 +1515,91 @@ function shPick(){
       </label>`).join('')}</div>`:
       '<div class="empty"><div class="ic">✓</div><p>No quedan pendientes</p></div>'}</div>
     ${disp.length?`<div class="sh-f"><button class="btn lg pri" data-confirmpick ${PICK.sel.length?'':'disabled'}>
-      ${PICK.sel.length?`Asignar ${PICK.sel.length} envío${PICK.sel.length>1?'s':''} · ${selBultos} bulto${selBultos>1?'s':''}`:'Marcá al menos un envío'}</button></div>`:''}
+      ${PICK.sel.length?`${PICK.direct?'Insertar':'Asignar'} ${PICK.sel.length} envío${PICK.sel.length>1?'s':''} · ${selBultos} bulto${selBultos>1?'s':''}`:'Marcá al menos un envío'}</button></div>`:''}
+  </div></div>`;
+}
+
+function enviosJornadaPorCadete(){
+  return CAD.map(c=>{
+    const ids=[...(PLANI[c.id]||[])];
+    (ROUTE_PLAN[c.id]||[]).forEach(id=>{
+      const e=ENVIOS.find(x=>x.id===id);
+      if(e&&e.fecha===DIA&&!['cancelado'].includes(e.estado)&&!ids.includes(id))ids.push(id);
+    });
+    ENVIOS.filter(e=>e.cadete===c.id&&e.fecha===DIA&&!['cancelado'].includes(e.estado))
+      .sort((a,b)=>(a.ventana||'').localeCompare(b.ventana||'')||a.id.localeCompare(b.id)).forEach(e=>{
+      if(e.cadete===c.id&&e.fecha===DIA&&!['cancelado'].includes(e.estado)&&!ids.includes(e.id))ids.push(e.id);
+    });
+    const envs=ids.map(id=>ENVIOS.find(e=>e.id===id)).filter(Boolean);
+    return {cadete:c,envs};
+  }).filter(x=>x.envs.length);
+}
+
+function shJornada(){
+  if(!JORNADA)return'';
+  const grupos=enviosJornadaPorCadete();
+  if(JFILT!=='todos'&&!grupos.some(g=>g.cadete.id===JFILT))JFILT='todos';
+  const visibles=JFILT==='todos'?grupos:grupos.filter(g=>g.cadete.id===JFILT);
+  const total=grupos.reduce((s,g)=>s+g.envs.length,0);
+  const bultos=grupos.reduce((s,g)=>s+g.envs.reduce((a,e)=>a+e.paquetes.length,0),0);
+  return `<div class="sh-bg" data-closejornada><div class="sh" role="dialog" aria-label="Jornada armada">
+    <div class="grab"></div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">${labelDia(DIA)} · ${numDia(DIA)}</div>
+      <h3>Jornada armada</h3></div>
+      <button class="hd-b" data-closejornada aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      ${total?`<div class="note" style="margin-bottom:14px"><span class="ni">▤</span>
+        <div><b>${total} envío${total>1?'s':''}</b> · ${bultos} bulto${bultos>1?'s':''}, ordenado por cadete.</div></div>
+      <div class="chips" style="margin-bottom:14px">
+        <button data-jfilt="todos" aria-pressed="${JFILT==='todos'}">Todos</button>
+        ${grupos.map(g=>`<button data-jfilt="${g.cadete.id}" aria-pressed="${JFILT===g.cadete.id}">${esc(g.cadete.n.split(' ')[0])} · ${g.envs.length}</button>`).join('')}
+      </div>
+      <div class="jday">${visibles.map(g=>{
+        const cant=g.envs.length,b=g.envs.reduce((s,e)=>s+e.paquetes.length,0);
+        return `<section class="jday-cad">
+          <div class="jday-head"><div class="jday-av">${g.cadete.ic}</div>
+            <div class="jday-m"><div class="jday-n">${esc(g.cadete.n)}</div>
+              <div class="jday-s">${esc(g.cadete.v)} · ${cant} envío${cant>1?'s':''} · ${b} bulto${b>1?'s':''}</div></div>
+            ${g.cadete.disp?'<span class="pill p-ent"><i class="dot"></i>Disponible</span>':'<span class="pill p-pend"><i class="dot"></i>No disp.</span>'}</div>
+          ${routeListHTML(g.envs,'Ruta armada para '+g.cadete.n,g.cadete.id,true)}
+          <button class="btn sm soft full" style="margin:12px 0" data-insertruta="${g.cadete.id}">+ Agregar envío a esta ruta</button>
+          <div class="jday-list">${g.envs.map(e=>`<div class="jday-env" data-env="${e.id}">
+          <button data-open="${e.id}" style="text-align:left">
+            <div class="jday-row"><div class="jday-title">${esc(e.destinatario)}</div><div class="jday-id">${e.id}</div></div>
+            <div class="jday-meta">${esc(e.cliente)} · ${esc(e.ventana)} · ${e.paquetes.length} bulto${e.paquetes.length>1?'s':''} · ${ES[e.estado].l}</div>
+            <div class="jday-stops"><div><b>Retirar:</b> ${esc(e.retiro)}</div><div><b>Entregar:</b> ${esc(e.entrega)}</div></div>
+          </button>
+          <div class="jday-actions"><button class="btn soft" data-moveenv="${e.id}">Cambiar cadete</button></div></div>`).join('')}</div>
+        </section>`}).join('')}</div>`:
+      '<div class="empty"><div class="ic">▤</div><p>No hay envíos asignados</p><small>Cuando confirmes u optimices una jornada, aparece acá agrupada por cadete.</small></div>'}
+    </div>
+  </div></div>`;
+}
+
+function shMove(){
+  if(!MOVE)return'';
+  const e=ENVIOS.find(x=>x.id===MOVE.id);if(!e)return'';
+  const from=e.cadete,puede=envioMovible(e.id);
+  return `<div class="sh-bg" data-closemove><div class="sh" role="dialog" aria-label="Cambiar cadete">
+    <div class="grab"></div>
+    <div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
+      <h3>Cambiar cadete</h3></div>
+      <button class="hd-b" data-closemove aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      <div class="panel"><dl class="kv">
+        <dt>Envío</dt><dd>${esc(e.destinatario)}</dd>
+        <dt>Actual</dt><dd>${esc(cadN(from))}</dd>
+        <dt>Entrega</dt><dd>${esc(e.entrega)}</dd></dl></div>
+      ${puede?`<div class="cadpick">${CAD.filter(c=>c.id!==from&&c.disp).map(c=>`
+        <button class="cp ${MOVE.to===c.id?'on':''}" data-moveto="${c.id}">
+          <span class="cp-ic">${c.ic}</span>
+          <span class="cp-n">${esc(c.n.split(' ')[0])}</span>
+          <span class="cp-c">Disponible</span></button>`).join('')}</div>`:
+        '<div class="note warn"><span class="ni">!</span><div>Este envío ya tiene una parada completada. No se puede mover a otro cadete desde la ruta.</div></div>'}
+      ${puede?`<div class="note" style="margin-top:14px"><span class="ni">↳</span>
+        <div>Al cambiarlo, el retiro y la entrega se agregan al final de las paradas futuras del nuevo cadete. Después podés reordenarlas.</div></div>`:''}
+    </div>
+    ${puede?`<div class="sh-f"><button class="btn lg pri" data-confirmmove ${MOVE.to?'':'disabled'}>Mover envío</button></div>`:''}
   </div></div>`;
 }
 
@@ -1479,11 +1786,11 @@ function render(){
   const navOverDock=dock&&['inicio','alta','nuevo','masiva'].includes(TAB);
   document.body.classList.toggle('has-dock',dock);
   document.body.classList.toggle('dock-over',navOverDock);
-  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(PICK?shPick():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
+  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(JORNADA?shJornada():'')+(PICK?shPick():'')+(MOVE?shMove():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
     (CREATED?shCreated():'')+(LABEL?shLabel():'')+(PAY?shPay():'')+
     (TOAST?`<div class="toast">${esc(TOAST)}</div>`:'');
   ['admin','cadete','cliente'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
-  document.body.style.overflow=(SEL||OP||PICK||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
+  document.body.style.overflow=(SEL||OP||PICK||MOVE||JORNADA||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
 }
 
 /* ===== eventos ===== */
@@ -1493,7 +1800,7 @@ document.addEventListener('click',ev=>{
   if(c('#theme')){const r=document.documentElement;
     const dk=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme:dark)').matches);
     r.setAttribute('data-theme',dk?'light':'dark');return}
-  for(const r of ['admin','cadete','cliente'])if(c('#r-'+r)){ROL=r;SEL=OP=PICK=null;DRAFT=null;
+  for(const r of ['admin','cadete','cliente'])if(c('#r-'+r)){ROL=r;SEL=OP=PICK=MOVE=null;JORNADA=false;DRAFT=null;
     TAB=NAV[r][0].k;topPage();render();return}
   const tb=c('[data-tab]');if(tb){TAB=tb.dataset.tab;topPage();render();return}
   const go=c('[data-go]');if(go){
@@ -1503,11 +1810,13 @@ document.addEventListener('click',ev=>{
     topPage();render();return}
   const op=c('[data-open]');if(op){const e=ENVIOS.find(x=>x.id===op.dataset.open);
     if(ROL==='admin'&&e&&esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)){
-      ATRAS=e.id;render();return}
-    SEL=op.dataset.open;render();return}
+      ATRAS=e.id;JORNADA=false;render();return}
+    SEL=op.dataset.open;JORNADA=false;render();return}
   if(closeHit('[data-close]')){SEL=null;render();return}
   if(closeHit('[data-closeop]')){OP=null;render();return}
   if(closeHit('[data-closepick]')){PICK=null;render();return}
+  if(closeHit('[data-closemove]')){MOVE=null;render();return}
+  if(closeHit('[data-closejornada]')){JORNADA=false;render();return}
   if(closeHit('[data-closelabel]')){LABEL=null;render();return}
   if(closeHit('[data-closecreated]')){CREATED=null;render();return}
   if(closeHit('[data-closepay]')){PAY=null;render();return}
@@ -1539,6 +1848,33 @@ document.addEventListener('click',ev=>{
 
   const add=c('[data-addto]');if(add){PICK={cadete:add.dataset.addto,sel:[]};render();return}
   if(c('#asignar-flow')){PICK={cadete:CAD.find(x=>x.disp).id,sel:[]};render();return}
+  if(c('#optimizar-rutas')){simularRuteadorExterno();render();return}
+  if(c('[data-jornada]')){JORNADA=true;render();return}
+  const jf=c('[data-jfilt]');if(jf){JFILT=jf.dataset.jfilt;render();return}
+  const ins=c('[data-insertruta]');if(ins){PICK={cadete:ins.dataset.insertruta,sel:[],direct:true};render();return}
+  const me=c('[data-moveenv]');if(me){MOVE={id:me.dataset.moveenv,to:null};render();return}
+  const mt=c('[data-moveto]');if(mt&&MOVE){MOVE.to=mt.dataset.moveto;render();return}
+  if(c('[data-confirmmove]')&&MOVE&&MOVE.to){const e=ENVIOS.find(x=>x.id===MOVE.id);
+    if(!e||!envioMovible(e.id)){flashToast('Ese envío ya tiene paradas completadas');MOVE=null;render();return}
+    const from=e.cadete,to=MOVE.to;
+    for(const k in PLANI)PLANI[k]=PLANI[k].filter(id=>id!==e.id);
+    for(const k in ROUTE_PLAN)ROUTE_PLAN[k]=ROUTE_PLAN[k].filter(id=>id!==e.id);
+    for(const k in ROUTE_STOPS)ROUTE_STOPS[k]=ROUTE_STOPS[k].filter(id=>!id.endsWith(':'+e.id));
+    e.cadete=to;e.estado='asignado';e.paquetes.forEach(p=>{if(p.estado!=='entregado')p.estado='asignado'});
+    ROUTE_PLAN[to]=[...(ROUTE_PLAN[to]||[]),e.id];
+    e.hist.push(evt('Reasignado de '+cadN(from)+' a '+cadN(to),'Cambio manual dentro de la jornada armada','Admin'));
+    MOVE=null;JORNADA=true;toast('Envío movido a '+cadN(to));return}
+  const re=c('[data-routeenv]');if(re&&!c('[data-moverstop]')){
+    const card=document.querySelector(`.jday-env[data-env="${re.dataset.routeenv}"]`);
+    if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.remove('hl');void card.offsetWidth;card.classList.add('hl')}
+    return}
+  const mv=c('[data-moverstop]');if(mv){
+    const routeEl=mv.closest('.route-out');
+    const [cid,ix,dir]=mv.dataset.moverstop.split('|'),i=Number(ix),j=i+Number(dir),arr=ROUTE_STOPS[cid]||[];
+    const steps=arr.map(stopFromKey).filter(Boolean),done=steps.map(stopDone),current=done.findIndex(x=>!x);
+    if(current<0||(i<=current||j<=current)){flashToast('Solo podés mover paradas futuras');return}
+    if(arr[j]){[arr[i],arr[j]]=[arr[j],arr[i]];ROUTE_STOPS[cid]=arr;flashToast('Orden de ruta actualizado')}
+    if(!refreshRouteList(routeEl,cid))render();return}
   const cp=c('[data-cadpick]');if(cp&&PICK){PICK.cadete=cp.dataset.cadpick;render();return}
 
   const tp=c('[data-tipo]');if(tp&&MAS){MAS.tipo=tp.dataset.tipo;MAS.paso=1;
@@ -1575,31 +1911,48 @@ document.addEventListener('click',ev=>{
   const diaX=c('[data-dia]');if(diaX){DIA=diaX.dataset.dia;CAL=false;topPage();render();return}
   if(c('#abrir-cal')){CAL=true;render();return}
   if(closeHit('[data-closecal]')){CAL=false;render();return}
-  const fe=c('[data-fecha]');if(fe&&DRAFT){DRAFT.fecha=fe.dataset.fecha;render();return}
+  const fe=c('[data-fecha]');if(fe&&DRAFT){
+    DRAFT.fecha=fe.dataset.fecha;
+    if(DRAFT.ventana&&!franjaVigente(DRAFT.ventana,DRAFT.fecha))DRAFT.ventana='';
+    render();return}
   const at=c('[data-atras]');if(at){ATRAS=at.dataset.atras;render();return}
   if(closeHit('[data-closeatras]')){ATRAS=null;render();return}
   const rep=c('[data-reprog]');if(rep){const e=ENVIOS.find(x=>x.id===ATRAS);
     e.fecha=rep.dataset.reprog;e.estado='pendiente';e.cadete=null;
     e.paquetes.forEach(p=>{if(p.estado!=='entregado')p.estado='pendiente'});
+    for(const k in PLANI)PLANI[k]=PLANI[k].filter(id=>id!==e.id);
+    for(const k in ROUTE_PLAN)ROUTE_PLAN[k]=ROUTE_PLAN[k].filter(id=>id!==e.id);
+    for(const k in ROUTE_STOPS)ROUTE_STOPS[k]=ROUTE_STOPS[k].filter(id=>!id.endsWith(':'+e.id));
     e.hist.push(evt('Reprogramado para '+labelDia(e.fecha).toLowerCase()+' '+numDia(e.fecha),
       'Vuelve a quedar pendiente de asignación','Admin'));
-    ATRAS=null;toast('Reprogramado para '+numDia(e.fecha));return}
+    DIA=e.fecha;TAB='inicio';ATRAS=null;topPage();toast('Reprogramado para '+numDia(e.fecha)+' · listo para asignar');return}
   if(c('[data-devolver]')){const e=ENVIOS.find(x=>x.id===ATRAS);
     e.estado='cancelado';e.custodia='Devuelto al remitente ('+e.cliente+')';e.cadete=null;
     e.paquetes.forEach(p=>p.estado='cancelado');
     e.hist.push(evt('Devuelto al remitente','El envío se cierra sin entrega · custodia de vuelta en origen','Admin'));
     ATRAS=null;toast('Devuelto a '+e.cliente);return}
   if(c('[data-confirmpick]')&&PICK){
+    if(PICK.direct){
+      PICK.sel.forEach(id=>{const e=ENVIOS.find(x=>x.id===id);
+        if(e){for(const k in PLANI)PLANI[k]=PLANI[k].filter(x=>x!==id);
+          e.estado='asignado';e.cadete=PICK.cadete;e.paquetes.forEach(p=>p.estado='asignado');
+          e.hist.push(evt('Insertado en ruta de '+cadN(PICK.cadete),'Agregado a una jornada ya armada','Admin'));
+          ROUTE_PLAN[PICK.cadete]=[...(ROUTE_PLAN[PICK.cadete]||[]).filter(x=>x!==id),id]}});      
+      const n=PICK.sel.length,quien=cadN(PICK.cadete).split(' ')[0];
+      PICK=null;JORNADA=true;toast(n+' envío'+(n>1?'s':'')+' insertado'+(n>1?'s':'')+' en la ruta de '+quien);return}
     PICK.sel.forEach(id=>{for(const k in PLANI)PLANI[k]=PLANI[k].filter(x=>x!==id);PLANI[PICK.cadete].push(id)});
-    const n=PICK.sel.length,quien=cadN(PICK.cadete).split(' ')[0];
+    ROUTED=false;const n=PICK.sel.length,quien=cadN(PICK.cadete).split(' ')[0];
     PICK=null;toast(n+' envío'+(n>1?'s':'')+' para '+quien);return}
   const un=c('[data-unassign]');if(un){for(const k in PLANI)PLANI[k]=PLANI[k].filter(x=>x!==un.dataset.unassign);
+    for(const k in ROUTE_PLAN)ROUTE_PLAN[k]=ROUTE_PLAN[k].filter(x=>x!==un.dataset.unassign);ROUTED=false;
+    for(const k in ROUTE_STOPS)ROUTE_STOPS[k]=ROUTE_STOPS[k].filter(x=>!x.endsWith(':'+un.dataset.unassign));
     render();return}
   if(c('#confirmar')){let n=0;
+    ROUTE_PLAN={c1:[...PLANI.c1],c2:[...PLANI.c2],c3:[...PLANI.c3]};
     for(const cid in PLANI)PLANI[cid].forEach(id=>{const e=ENVIOS.find(x=>x.id===id);
       if(e){e.estado='asignado';e.cadete=cid;e.paquetes.forEach(p=>p.estado='asignado');
         e.hist.push(evt('Asignado a '+cadN(cid),'Responsabilidad operativa · la custodia no cambia','Admin'));n++}});
-    PLANI={c1:[],c2:[],c3:[]};toast(n+' envío'+(n>1?'s':'')+' asignado'+(n>1?'s':'')+' ✓');return}
+    PLANI={c1:[],c2:[],c3:[]};ROUTED=false;toast(n+' envío'+(n>1?'s':'')+' asignado'+(n>1?'s':'')+' ✓');return}
 
   const tg=c('[data-toggle]');if(tg){const cd=CAD.find(x=>x.id===tg.dataset.toggle);
     const act=ENVIOS.filter(e=>e.cadete===cd.id&&!['entregado','cancelado'].includes(e.estado)).length;
@@ -1622,7 +1975,9 @@ document.addEventListener('click',ev=>{
     if(d.paso===1){d.retiro=d.retiro.trim();d.retiroNuevo=d.retiroNuevo.trim();
       if(!d.cliente)d.err.cliente='Elegí quién envía.';if(!retiroDraft(d))d.err.retiro='Falta completar la dirección de retiro.'}
     if(d.paso===2){d.entrega=entregaDraft(d);if(!d.dest.trim())d.err.dest='Falta quién recibe.';
-      if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';if(!d.ventana)d.err.ventana='Elegí un horario.'}
+      if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';
+      if(!d.ventana)d.err.ventana='Elegí un horario.';
+      else if(!franjaVigente(d.ventana,d.fecha))d.err.ventana='Esa franja ya pasó. Elegí otra.'}
     if(Object.keys(d.err).length){render();return}
     d.paso++;topPage();render();return}
   if(c('#crear')){const d=DRAFT;
@@ -1639,7 +1994,9 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;render();return}
   if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
   if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
-  if(t.id==='f-zona'){DRAFT.zona=t.value;DRAFT.fecha=jornadasZona(DRAFT.zona)[0];DRAFT.err.entrega=null;render();return}
+  if(t.id==='f-zona'){DRAFT.zona=t.value;DRAFT.fecha=jornadasZona(DRAFT.zona)[0];
+    if(DRAFT.ventana&&!franjaVigente(DRAFT.ventana,DRAFT.fecha))DRAFT.ventana='';
+    DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ent-loc'){DRAFT.entregaCosta.loc=t.value;DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ven'){DRAFT.ventana=t.value;return}
   if(t.id==='f-urg'){DRAFT.urgente=!!t.value;return}
@@ -1649,6 +2006,10 @@ document.addEventListener('change',e=>{const t=e.target;
 document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){vEnvios.q=t.value;const p=t.selectionStart;render();
     const n=document.querySelector('#q');if(n){n.focus();n.setSelectionRange(p,p)}return}
+  if(t.dataset.base){
+    const c=CAD.find(x=>x.id===t.dataset.base);
+    if(c)c.base=t.value;
+    return}
   if(t.id==='f-dest')DRAFT.dest=t.value;
   if(t.id==='f-ret-new'){DRAFT.retiroNuevo=t.value;DRAFT.err.retiro=null}
   if(t.id==='f-tel')DRAFT.tel=t.value;
@@ -1664,7 +2025,7 @@ document.addEventListener('input',e=>{const t=e.target;
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){
-  if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
+  if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(MOVE)MOVE=null;else if(JORNADA)JORNADA=false;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
 
 render();
 </script>
