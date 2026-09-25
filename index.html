@@ -540,6 +540,34 @@ button.otrodia:active{transform:scale(.99)}
 .kv dt{color:var(--ink-3);font-weight:700;font-size:12.5px}
 .kv dd{margin:0;line-height:1.4;font-weight:500}
 .tel{color:var(--brand);font-weight:700;text-decoration:none}
+.matrix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--sh)}
+.mini .k{font-size:12px;color:var(--ink-3);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.mini .v{font-size:22px;font-weight:850;margin-top:4px;color:var(--ink)}
+.rowcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:var(--sh);margin-bottom:10px}
+.rowtop{display:flex;align-items:flex-start;gap:12px}
+.rowic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--soft);font-size:19px;flex:none}
+.rowmain{flex:1;min-width:0}.rowt{font-weight:850;letter-spacing:-.015em}.rows{font-size:13px;color:var(--ink-2);line-height:1.4;margin-top:3px}
+.rowact{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mapbox{position:relative;min-height:260px;border-radius:22px;overflow:hidden;background:
+  linear-gradient(90deg,rgba(13,112,82,.08) 1px,transparent 1px),
+  linear-gradient(0deg,rgba(13,112,82,.08) 1px,transparent 1px),var(--card);
+  background-size:38px 38px;border:1px solid var(--line);box-shadow:var(--sh)}
+.route-line{position:absolute;left:56px;right:44px;top:74px;height:118px;border:4px solid var(--brand);
+  border-left-color:transparent;border-bottom-color:transparent;border-radius:80px;opacity:.62}
+.pin{position:absolute;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);
+  box-shadow:var(--sh);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}
+.pin i{width:22px;height:22px;border-radius:11px;display:grid;place-items:center;background:var(--brand);color:var(--on-solid);font-style:normal;font-size:11px}
+.stop{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:9px}
+.drag{width:34px;height:34px;border-radius:12px;background:var(--soft);display:grid;place-items:center;color:var(--ink-3);font-weight:900}
+.stop b{display:block;font-size:14px}.stop span{display:block;color:var(--ink-2);font-size:12.5px;margin-top:2px}
+.label-preview{background:#fff;color:#111;border:1px dashed #999;border-radius:16px;padding:18px;font-family:Arial,sans-serif}
+.label-code{font-size:30px;font-weight:900;letter-spacing:.04em;margin-bottom:10px}
+.sigbox,.filebox{height:92px;border:1px dashed var(--line);border-radius:16px;background:var(--soft);display:grid;place-items:center;
+  color:var(--ink-3);font-weight:750;text-align:center;padding:10px}
+.split{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:720px){.split{grid-template-columns:1fr 1fr}.matrix{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .bignext{background:var(--card);border-radius:var(--r);box-shadow:var(--sh-md);overflow:hidden}
 .bignext .bt{background:var(--mint);padding:18px 20px}
 .bignext .act{color:var(--brand-ink)}
@@ -598,12 +626,17 @@ const esPasado=f=>f<HOY;
 const hhmm=t=>new Date(t).toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
 const fch=t=>new Date(t).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});
 const nowISO=()=>new Date().toISOString();
-let SEQ=1052,PSEQ=4310;
-const nextE=()=>'E-'+(++SEQ),nextP=()=>'P-'+(++PSEQ);
+let SEQ=1052;
+const nextE=()=>{
+  SEQ++;
+  const block=Math.floor((SEQ-1)/9999);
+  const num=((SEQ-1)%9999)+1;
+  return String.fromCharCode(65+block)+String(num).padStart(4,'0');
+};
 
 const ES={pendiente:{l:'Pendiente',c:'p-pend'},asignado:{l:'Asignado',c:'p-asig'},
   retirado:{l:'En poder',c:'p-ret'},ruta:{l:'En ruta',c:'p-ruta'},entregado:{l:'Entregado',c:'p-ent'},
-  parcial:{l:'Parcial',c:'p-parc'},incidencia:{l:'Incidencia',c:'p-inc'},cancelado:{l:'Cancelado',c:'p-pend'}};
+  incidencia:{l:'Incidencia',c:'p-inc'},cancelado:{l:'Cancelado',c:'p-pend'}};
 const pill=e=>`<span class="pill ${ES[e].c}"><i class="dot"></i>${ES[e].l}</span>`;
 
 const CAD=[{id:'c1',n:'Martín Rodríguez',v:'Moto',ic:'🛵',disp:true},
@@ -618,7 +651,8 @@ function mk(o){const id=nextE();
   return{id,cliente:o.cliente,retiro:o.retiro,destinatario:o.destinatario,entrega:o.entrega,
     tel:o.tel||'099 000 000',fecha:o.fecha||HOY,ventana:o.ventana,estado:o.estado||'pendiente',cadete:o.cadete||null,
     custodia:o.custodia||'Cliente/remitente',urgente:!!o.urgente,fragil:!!o.fragil,notas:o.notas||'',
-    paquetes:o.paquetes.map((p,i)=>({id:nextP(),tam:p.tam,estado:p.estado||o.estado||'pendiente',n:i+1})),
+    comprobante:o.comprobante||null,
+    paquetes:o.paquetes.map((p,i)=>({tam:p.tam,estado:p.estado||o.estado||'pendiente',n:i+1})),
     hist:o.hist||[evt('Envío registrado','Estado pendiente · custodia del remitente','Admin')]}}
 
 let ENVIOS=[
@@ -657,7 +691,7 @@ let ENVIOS=[
       evt('Entrega no concretada','Destinatario ausente · reprogramar','Pedro S.')]})
 ];
 
-let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null;
+let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,PANEL=null;
 let DIA=JORNADAS[0],ATRAS=null,CAL=false;
 let MAS=null; // {paso, cliente, filas[], excluidas[]}
 
@@ -691,7 +725,8 @@ let PLANI={c1:[],c2:[],c3:[]};
 
 const NAV={
   admin:[{k:'inicio',l:'Inicio',i:'◈'},{k:'envios',l:'Envíos',i:'▤'},
-    {k:'alta',l:'Nuevo',i:'＋'},{k:'masiva',l:'Cargar',i:'▤'},{k:'cadetes',l:'Equipo',i:'◉'}],
+    {k:'alta',l:'Nuevo',i:'＋'},{k:'masiva',l:'Cargar',i:'▤'},{k:'usuarios',l:'Usuarios',i:'◎'},
+    {k:'rutas',l:'Rutas',i:'⌁'},{k:'cadetes',l:'Equipo',i:'◉'}],
   cadete:[{k:'tareas',l:'Tareas',i:'◈'},{k:'hoy',l:'Mi día',i:'▦'}],
   cliente:[{k:'mis',l:'Envíos',i:'▤'},{k:'nuevo',l:'Pedir',i:'＋'}]
 };
@@ -705,6 +740,8 @@ const HEAD={
   mis:{t:'Seguí tus envíos<em>en tiempo real.</em>',s:'Estado actualizado de cada paquete.'},
   nuevo:{t:'Pedir un envío',s:'Contanos qué hay que llevar y adónde.'},
   masiva:{t:'Cargar<em>varios envíos.</em>',s:'Subí una planilla y creá todo de una vez.'}
+  ,usuarios:{t:'Usuarios<em>y clientes.</em>',s:'Alta, roles, habilitación y direcciones.'}
+  ,rutas:{t:'Rutas<em>y paradas.</em>',s:'Orden visual para validar la jornada.'}
 };
 
 const $=s=>document.querySelector(s);
@@ -717,7 +754,7 @@ function bul(e){return{t:e.paquetes.length,d:e.paquetes.filter(p=>p.estado==='en
 function sync(e){const{t,d}=bul(e);
   if(e.paquetes.every(p=>p.estado==='incidencia'))e.estado='incidencia';
   else if(d===t&&t>0)e.estado='entregado';
-  else if(d>0&&d<t)e.estado='parcial';
+  else if(d>0&&d<t)e.estado='ruta';
   else if(e.paquetes.some(p=>p.estado==='retirado'))e.estado='retirado'}
 function progHTML(e){const b=bul(e);
   return `<span class="prog">${e.paquetes.map(p=>`<i class="${p.estado==='entregado'?'on':
@@ -733,7 +770,7 @@ function vInicio(){
   const atrasados=DIA===HOY?ENVIOS.filter(e=>esPasado(e.fecha)
     &&['pendiente','asignado','incidencia'].includes(e.estado)&&!enP.includes(e.id)):[];
   const pend=[...atrasados,...delDia];
-  const act=ENVIOS.filter(e=>['asignado','retirado','ruta','parcial'].includes(e.estado)).length;
+  const act=ENVIOS.filter(e=>['asignado','retirado','ruta'].includes(e.estado)).length;
   const inc=ENVIOS.filter(e=>e.estado==='incidencia').length;
   const cuenta=f=>ENVIOS.filter(e=>e.fecha===f&&e.estado==='pendiente').length;
   const esHoy=DIA===HOY;
@@ -820,12 +857,11 @@ function vEnvios(){
   let L=f==='atrasados'
     ?ENVIOS.filter(e=>esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado))
     :ENVIOS.filter(e=>f==='todos'||e.estado===f);
-  if(q)L=L.filter(e=>(e.id+e.cliente+e.destinatario+e.entrega).toLowerCase().includes(q)
-    ||e.paquetes.some(p=>p.id.toLowerCase().includes(q)));
+  if(q)L=L.filter(e=>(e.id+e.cliente+e.destinatario+e.entrega).toLowerCase().includes(q));
   const atr=ENVIOS.filter(e=>esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)).length;
   const fs=[['todos','Todos'],...(atr?[['atrasados','Atrasados ('+atr+')']]:[]),
     ['pendiente','Pendientes'],['asignado','Asignados'],['retirado','En poder'],
-    ['parcial','Parciales'],['entregado','Entregados'],['incidencia','Incidencias']];
+    ['entregado','Entregados'],['incidencia','Incidencias']];
   return `<div class="search"><span class="ic">⌕</span>
     <input id="q" inputmode="search" placeholder="Buscar envío o bulto…" value="${esc(vEnvios.q||'')}"></div>
   <div class="chips">${fs.map(([k,l])=>`<button data-f="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
@@ -873,7 +909,10 @@ function vAlta(){
       <div class="field"><label for="f-urg">¿Es urgente?</label>
       <select id="f-urg"><option value="">No, normal</option><option value="1" ${d.urgente?'selected':''}>Sí, urgente</option></select></div>
       <div class="field"><label for="f-not">Algo más que debamos saber</label>
-      <textarea id="f-not" placeholder="Referencias, timbre, horarios…">${esc(d.notas)}</textarea></div>`;
+      <textarea id="f-not" placeholder="Referencias, timbre, horarios…">${esc(d.notas)}</textarea></div>
+      <div class="field"><label>Comprobante de pago</label>
+        <div class="filebox">Adjuntar imagen o PDF opcional</div>
+        <span class="hint" style="margin-top:8px;display:block">Solo usuarios autorizados podrán verlo.</span></div>`;
   }else if(d.paso===3){
     const n=d.paquetes.length,tam=d.paquetes[0].tam;
     const TAM=[['S','Chico','Sobre, caja pequeña'],['M','Mediano','Caja de zapatos'],
@@ -1012,6 +1051,69 @@ function vMasiva(){
       <button class="btn lg pri" data-go="inicio">Ir a planificar</button></div>`;
 }
 
+function vUsuarios(){
+  const pendientes=[{n:'Muebles Prado',mail:'ventas@mueblesprado.uy',dir:'Av. Millán 3120'},
+    {n:'Cosmética Luna',mail:'hola@lunacosmetica.uy',dir:'Bvar. Artigas 1521'}];
+  return `<div class="matrix">
+    <div class="mini"><div class="k">Pendientes</div><div class="v">${pendientes.length}</div></div>
+    <div class="mini"><div class="k">Clientes</div><div class="v">${CLI.length}</div></div>
+    <div class="mini"><div class="k">Cadetes</div><div class="v">${CAD.length}</div></div>
+    <div class="mini"><div class="k">Roles</div><div class="v">3</div></div>
+  </div>
+  <div class="sec"><div class="sec-h"><h3>Clientes para habilitar</h3></div>
+    ${pendientes.map(p=>`<div class="rowcard"><div class="rowtop">
+      <div class="rowic">◎</div><div class="rowmain"><div class="rowt">${esc(p.n)}</div>
+      <div class="rows">${esc(p.mail)}<br>${esc(p.dir)}</div></div>
+      <span class="pill p-pend"><i class="dot"></i>Pendiente</span></div>
+      <div class="rowact"><button class="btn sm pri" data-panel="habilitar">Aprobar acceso</button>
+      <button class="btn sm soft" data-panel="cliente">Editar datos</button></div></div>`).join('')}
+  </div>
+  <div class="sec"><div class="sec-h"><h3>Clientes y direcciones</h3>
+    <button class="more" data-panel="cliente">Ver ficha</button></div>
+    ${CLI.map(c=>`<div class="rowcard"><div class="rowtop">
+      <div class="rowic">◷</div><div class="rowmain"><div class="rowt">${esc(c.n)}</div>
+      <div class="rows">${esc(c.tel)} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''} guardada${c.dirs.length>1?'s':''}<br>${esc(c.dirs[0])}</div></div>
+      <span class="pill p-ent"><i class="dot"></i>Habilitado</span></div>
+      <div class="rowact"><button class="btn sm soft" data-panel="cliente">Editar</button>
+      <button class="btn sm soft" data-panel="direccion">Direcciones</button></div></div>`).join('')}</div>
+  <div class="sec"><div class="sec-h"><h3>Usuarios internos</h3>
+    <button class="more" data-panel="usuario">Nuevo usuario</button></div>
+    ${[{n:'Fernando Coito',r:'Administrador',s:'Activo'},{n:'Martín Rodríguez',r:'Cadete',s:'Activo'},
+      {n:'Lucía Operaciones',r:'Operadora',s:'Sin invitar'}].map(u=>`<div class="rowcard"><div class="rowtop">
+      <div class="rowic">◎</div><div class="rowmain"><div class="rowt">${esc(u.n)}</div>
+      <div class="rows">${esc(u.r)} · ${esc(u.s)}<br>Permisos visibles antes de guardar.</div></div>
+      <button class="btn sm soft" data-panel="usuario">Rol</button></div></div>`).join('')}</div>`;
+}
+
+function vRutas(){
+  const stops=[
+    ['R','Retirar','Boutique Amalia','Av. Rivera 2456 · A1053 · 2 bultos','10:00'],
+    ['R','Retirar','Farmacia del Centro','18 de Julio 1420 · A1055 · 3 bultos','10:35'],
+    ['E','Entregar','Laura Gómez','Av. Italia 3400 · A1053','11:20'],
+    ['R','Retirar','Tienda Nube MVD','Av. Brasil 1900 · A1054','12:05'],
+    ['E','Entregar','Ana Silva','Rbla. Perú 700 · A1055','12:40']
+  ];
+  return `<div class="mapbox">
+    <div class="route-line"></div>
+    <div class="pin" style="left:22px;top:38px"><i>1</i>Rivera</div>
+    <div class="pin" style="right:30px;top:72px"><i>2</i>Centro</div>
+    <div class="pin" style="left:82px;bottom:54px"><i>3</i>Malvín</div>
+    <div class="pin" style="right:42px;bottom:34px"><i>5</i>Pocitos</div>
+  </div>
+  <div class="sec"><div class="sec-h"><h3>Ruta de Martín</h3>
+    <button class="more" data-panel="reasignar">Reasignar</button></div>
+    <div class="note" style="margin-bottom:12px"><span class="ni">⌁</span><div>Las paradas mezclan retiros y entregas según convenga a la ruta. Los controles permiten validar orden manual sin depender de un optimizador externo.</div></div>
+    ${stops.map((s,i)=>`<div class="stop">
+      <div class="drag">⋮⋮</div><div><b>${i+1}. ${s[1]} · ${esc(s[2])}</b><span>${esc(s[3])}</span></div>
+      <span class="${s[0]==='R'?'urg':'pill p-ruta'}">${s[4]}</span></div>`).join('')}
+  </div>
+  <div class="sec"><div class="sec-h"><h3>Rutas generadas</h3></div>
+    ${CAD.map((c,i)=>`<div class="rowcard"><div class="rowtop">
+      <div class="rowic">${c.ic}</div><div class="rowmain"><div class="rowt">${esc(c.n)}</div>
+      <div class="rows">${i===0?'5 paradas · 3 retiros · 2 entregas':'Sin ruta confirmada'}<br>${c.v}</div></div>
+      <button class="btn sm soft" data-panel="ruta">Ver</button></div></div>`).join('')}</div>`;
+}
+
 function vCadetes(){
   return `<div class="sec">${CAD.map(c=>{
     const act=ENVIOS.filter(e=>e.cadete===c.id&&!['entregado','cancelado'].includes(e.estado)).length;
@@ -1101,18 +1203,26 @@ function shDet(){
         <dt>Horario</dt><dd>${esc(e.ventana)}</dd>
         ${!cli?`<dt>Cadete</dt><dd>${e.cadete?cadIc(e.cadete)+' '+esc(cadN(e.cadete)):'Sin asignar'}</dd>
         <dt>Custodia</dt><dd>${esc(e.custodia)}</dd>`:''}</dl></div>
-      <div class="panel"><div class="panel-t">Bultos · ${b.d} de ${b.t} entregados</div>
-        ${e.paquetes.map(p=>`<div class="pk"><div class="pk-d"><b>${p.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
+      <div class="panel"><div class="panel-t">Bultos · viajan juntos con la misma etiqueta</div>
+        ${e.paquetes.map(p=>`<div class="pk"><div class="pk-d"><b>${e.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
           ${pill(p.estado)}</div>`).join('')}</div>
       <div class="panel"><div class="panel-t">Historial</div>
         <div class="tl">${e.hist.slice().reverse().map((h,i)=>`<div class="tl-i ${i===0?'hl':''}">
           <div class="tl-t">${esc(h.t)}</div><div class="tl-m">${esc(h.d)}</div>
           <div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)} · ${esc(h.who)}</div></div>`).join('')}</div></div>
+      ${!cli?`<div class="panel"><div class="panel-t">Acciones operativas</div>
+        <div class="rowact"><button class="btn sm soft" data-panel="editar">Editar</button>
+        <button class="btn sm soft" data-panel="reprogramar">Reprogramar</button>
+        <button class="btn sm soft" data-panel="cancelar">Cancelar</button>
+        <button class="btn sm soft" data-panel="etiqueta">Etiqueta</button>
+        <button class="btn sm soft" data-panel="custodia">Custodia</button>
+        <button class="btn sm soft" data-panel="reasignar">Reasignar</button>
+        <button class="btn sm soft" data-panel="incidencia">Incidencia</button></div></div>`:''}
     </div>
     <div class="sh-f">
       ${!cli&&e.estado==='asignado'?`<button class="btn lg pri" data-retiro="${e.id}">Confirmar retiro</button>`:''}
-      ${!cli&&['retirado','ruta','parcial'].includes(e.estado)?`<button class="btn lg pri" data-entrega="${e.id}">Confirmar entrega</button>`:''}
-      <button class="btn lg soft" data-close style="${!cli&&['asignado','retirado','ruta','parcial'].includes(e.estado)?'flex:0 0 92px':''}">Cerrar</button></div>
+      ${!cli&&['retirado','ruta'].includes(e.estado)?`<button class="btn lg pri" data-entrega="${e.id}">Confirmar entrega</button>`:''}
+      <button class="btn lg soft" data-close style="${!cli&&['asignado','retirado','ruta'].includes(e.estado)?'flex:0 0 92px':''}">Cerrar</button></div>
   </div></div>`;
 }
 
@@ -1121,7 +1231,6 @@ function shOp(){
   const e=ENVIOS.find(x=>x.id===OP.envio);if(!e)return'';
   const r=OP.tipo==='retiro';
   const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
-  const all=OP.sel.length===el.length;
   return `<div class="sh-bg" data-closeop><div class="sh" role="dialog">
     <div class="grab"></div>
     <div class="sh-h"><div><div class="hint" style="font-weight:700">${r?'Retiro':'Entrega'} · ${e.id}</div>
@@ -1130,15 +1239,12 @@ function shOp(){
     <div class="sh-b">
       ${e.fragil?`<div class="note warn" style="margin-bottom:14px"><span class="ni">◆</span>
         <div><b>Contenido frágil.</b> Manejá los bultos con cuidado al ${r?'cargarlos':'entregarlos'}.</div></div>`:''}
-      <div class="panel"><div class="panel-t">¿Qué bultos ${r?'retirás':'entregás'}?</div>
-        <button class="btn sm soft full" id="selall" style="margin-bottom:12px">
-          ${all?'Desmarcar todos':`Marcar los ${el.length}`}</button>
-        ${el.map(p=>`<label class="pk ${OP.sel.includes(p.id)?'on':''}">
-          <input type="checkbox" class="chk" data-pk="${p.id}" ${OP.sel.includes(p.id)?'checked':''}>
-          <div class="pk-d"><b>${p.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
-          </label>`).join('')}
-        ${OP.sel.length&&!all?`<div class="note warn" style="margin-top:13px"><span class="ni">⚠</span>
-          <div><b>${r?'Retiro':'Entrega'} parcial.</b> Los ${el.length-OP.sel.length} bultos restantes siguen su curso.</div></div>`:''}
+      <div class="panel"><div class="panel-t">Bultos del envío</div>
+        ${el.map(p=>`<div class="pk">
+          <div class="pk-d"><b>${e.id}</b><br>Bulto ${p.n} de ${e.paquetes.length} · ${p.tam}</div>
+          ${pill(p.estado)}</div>`).join('')}
+        <div class="note" style="margin-top:13px"><span class="ni">✓</span>
+          <div>Los bultos de un mismo envío viajan juntos hacia el mismo destino. Si van a destinos distintos, se registran como envíos separados.</div></div>
       </div>
       <div class="panel">
         ${!r?`<div class="field"><label for="op-rec">¿Quién lo recibe?</label>
@@ -1147,10 +1253,14 @@ function shOp(){
         <div class="field" style="margin-bottom:0"><label for="op-obs">Observaciones</label>
           <textarea id="op-obs" placeholder="Opcional">${esc(OP.obs||'')}</textarea></div>
       </div>
+      <div class="split">
+        <div class="panel"><div class="panel-t">Firma opcional</div><div class="sigbox">Área de firma visual, no obligatoria</div></div>
+        <div class="panel"><div class="panel-t">Evidencia opcional</div><div class="filebox">Foto o archivo adjunto, no obligatorio</div></div>
+      </div>
       <button class="btn danger full" data-fallo>No se pudo ${r?'retirar':'entregar'}</button>
     </div>
-    <div class="sh-f"><button class="btn lg pri" data-confirmop ${OP.sel.length?'':'disabled'}>
-      ${OP.sel.length?`Confirmar ${OP.sel.length} bulto${OP.sel.length>1?'s':''}`:'Marcá al menos uno'}</button></div>
+    <div class="sh-f"><button class="btn lg pri" data-confirmop>
+      Confirmar ${r?'retiro':'entrega'} del envío</button></div>
   </div></div>`;
 }
 
@@ -1252,6 +1362,77 @@ function shAtras(){
   </div></div>`;
 }
 
+function shPanel(){
+  if(!PANEL)return'';
+  const e=SEL?ENVIOS.find(x=>x.id===SEL):ENVIOS[0];
+  const title={
+    editar:'Editar envío',reprogramar:'Reprogramar envío',cancelar:'Cancelación controlada',etiqueta:'Etiqueta imprimible',
+    custodia:'Transferir custodia',reasignar:'Reasignar durante la operativa',incidencia:'Incidencia estructurada',
+    cliente:'Cliente y datos comerciales',direccion:'Direcciones del cliente',usuario:'Usuario y rol',habilitar:'Aprobar cliente',
+    ruta:'Ruta generada'
+  }[PANEL]||'Vista';
+  let body='';
+  if(PANEL==='etiqueta'){
+    body=`<div class="label-preview"><div class="label-code">${e.id}</div>
+      <div><b>Remitente:</b> ${esc(e.cliente)}</div><div><b>Retiro:</b> ${esc(e.retiro)}</div>
+      <hr><div><b>Destinatario:</b> ${esc(e.destinatario)}</div><div><b>Entrega:</b> ${esc(e.entrega)}</div>
+      <div><b>Tel:</b> ${esc(e.tel)} · <b>Horario:</b> ${esc(e.ventana)}</div>
+      <div><b>Bultos:</b> ${e.paquetes.length} · misma etiqueta para todo el envío</div>
+      ${e.notas?`<div><b>Notas:</b> ${esc(e.notas)}</div>`:''}</div>
+      <div class="btnrow" style="margin-top:14px"><button class="btn lg soft">Vista previa PDF</button>
+      <button class="btn lg pri">Imprimir</button></div>`;
+  }else if(PANEL==='custodia'){
+    body=`<div class="panel"><dl class="kv"><dt>Custodia actual</dt><dd>${esc(e.custodia)}</dd>
+      <dt>Envío</dt><dd>${e.id}</dd></dl></div>
+      <div class="panel"><div class="field"><label>Transferir a</label><select><option>Depósito Ohana</option><option>Martín Rodríguez</option><option>Pedro Suárez</option><option>Cliente/remitente</option></select></div>
+      <div class="field"><label>Motivo</label><select><option>Ingreso a depósito</option><option>Relevo de cadete</option><option>Devolución temporal</option></select></div>
+      <div class="field" style="margin-bottom:0"><label>Observaciones</label><textarea placeholder="Ej: se deja en depósito para entrega de tarde"></textarea></div></div>`;
+  }else if(PANEL==='incidencia'){
+    body=`<div class="matrix" style="margin-bottom:14px"><div class="mini"><div class="k">Abiertas</div><div class="v">3</div></div>
+      <div class="mini"><div class="k">Ausente</div><div class="v">42%</div></div>
+      <div class="mini"><div class="k">Resueltas</div><div class="v">8</div></div>
+      <div class="mini"><div class="k">Mes</div><div class="v">17</div></div></div>
+      <div class="panel"><div class="field"><label>Tipo</label><select><option>Destinatario ausente</option><option>Dirección incorrecta</option><option>Paquete dañado</option><option>No se pudo retirar</option></select></div>
+      <div class="field"><label>Estado</label><select><option>Abierta</option><option>En seguimiento</option><option>Resuelta</option></select></div>
+      <div class="field"><label>Resolución esperada</label><textarea placeholder="Ej: llamar al destinatario y reprogramar para mañana"></textarea></div>
+      <div class="filebox">Evidencia opcional: foto o archivo</div></div>`;
+  }else if(PANEL==='reasignar'){
+    body=`<div class="panel"><div class="panel-t">Enviar trabajo a otro cadete</div>
+      ${CAD.map(c=>`<label class="pk"><input type="radio" name="cad" class="chk"><div class="pk-d"><b>${c.ic} ${esc(c.n)}</b><br>${c.disp?'Libre':'Ocupado'} · ${c.v}</div></label>`).join('')}
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label>Motivo de reasignación</label><textarea placeholder="Ej: Martín termina antes, Pedro cubre la zona"></textarea></div></div>`;
+  }else if(PANEL==='reprogramar'){
+    body=`<div class="panel"><div class="panel-t">Nueva fecha</div><div class="diapick">${JORNADAS.slice(0,6).map(f=>`
+      <button class="dp"><span class="dp-d">${labelDia(f)}</span><span class="dp-n">${numDia(f)}</span></button>`).join('')}</div>
+      <div class="field" style="margin-top:14px"><label>Nueva franja</label><select><option>09:00–12:00</option><option>10:00–13:00</option><option>14:00–18:00</option></select></div>
+      <div class="field" style="margin-bottom:0"><label>Motivo</label><textarea placeholder="Motivo visible en historial"></textarea></div></div>`;
+  }else if(PANEL==='cancelar'){
+    body=`<div class="note warn" style="margin-bottom:14px"><span class="ni">⚠</span><div>La cancelación queda auditada y puede requerir devolución al remitente si el cadete ya retiró el paquete.</div></div>
+      <div class="panel"><div class="field"><label>Motivo</label><select><option>Cancelado por cliente</option><option>Dirección inválida</option><option>Fuera de cobertura</option><option>Otro</option></select></div>
+      <div class="field"><label>Acción sobre custodia</label><select><option>Mantener en remitente</option><option>Devolver al remitente</option><option>Retener en depósito</option></select></div>
+      <div class="field" style="margin-bottom:0"><label>Observaciones</label><textarea></textarea></div></div>`;
+  }else if(PANEL==='editar'){
+    body=`<div class="panel"><div class="field"><label>Destinatario</label><input value="${esc(e.destinatario)}"></div>
+      <div class="field"><label>Teléfono</label><input value="${esc(e.tel)}"></div>
+      <div class="field"><label>Dirección de entrega</label><input value="${esc(e.entrega)}"></div>
+      <div class="field"><label>Comprobante de pago opcional</label><div class="filebox">Adjuntar imagen o PDF, no obligatorio</div></div>
+      <div class="field" style="margin-bottom:0"><label>Notas</label><textarea>${esc(e.notas)}</textarea></div></div>`;
+  }else if(['cliente','direccion','usuario','habilitar'].includes(PANEL)){
+    body=`<div class="panel"><div class="field"><label>Nombre</label><input placeholder="Nombre o razón social"></div>
+      <div class="field"><label>Email</label><input placeholder="correo@empresa.uy"></div>
+      <div class="field"><label>Rol / estado</label><select><option>Cliente habilitado</option><option>Cliente pendiente</option><option>Administrador</option><option>Cadete</option></select></div>
+      <div class="field"><label>Direcciones guardadas</label><textarea placeholder="Una dirección por línea"></textarea></div>
+      <div class="note"><span class="ni">◎</span><div>Al aprobar un cliente, el sistema enviaría un email automático de acceso. Esta pantalla es solo visual.</div></div></div>`;
+  }else{
+    body=`<div class="mapbox"><div class="route-line"></div><div class="pin" style="left:24px;top:42px"><i>1</i>Retiro</div>
+      <div class="pin" style="right:38px;top:92px"><i>2</i>Entrega</div><div class="pin" style="left:80px;bottom:52px"><i>3</i>Retiro</div></div>`;
+  }
+  return `<div class="sh-bg" data-closepanel><div class="sh" role="dialog" aria-label="${esc(title)}">
+    <div class="grab"></div><div class="sh-h"><div><div class="hint" style="font-weight:700">Prototipo visual</div>
+    <h3>${esc(title)}</h3></div><button class="hd-b" data-closepanel aria-label="Cerrar">×</button></div>
+    <div class="sh-b">${body}</div><div class="sh-f"><button class="btn lg soft" data-closepanel>Cerrar</button>
+    <button class="btn lg pri" data-mocksave>Guardar visual</button></div></div></div>`;
+}
+
 /* ===== render ===== */
 function render(){
   const items=NAV[ROL];
@@ -1268,18 +1449,18 @@ function render(){
     <span class="icw"><span class="ic">${i.i}</span>
     ${i.k==='inicio'&&pend?`<span class="badge">${pend}</span>`:''}</span>
     <span class="lb">${i.l}</span></button>`).join('');
-  const V={inicio:vInicio,envios:vEnvios,alta:vAlta,cadetes:vCadetes,tareas:vTareas,hoy:vHoy,mis:vMis,
-    nuevo:vAlta,masiva:vMasiva};
+  const V={inicio:vInicio,envios:vEnvios,alta:vAlta,cadetes:vCadetes,usuarios:vUsuarios,rutas:vRutas,
+    tareas:vTareas,hoy:vHoy,mis:vMis,nuevo:vAlta,masiva:vMasiva};
   const html=(V[TAB]||vInicio)();
   $('#view').innerHTML=html;
   const dock=html.includes('class="dock"');
   // En 'inicio' hay que poder seguir navegando; en el wizard y las tareas, la acción manda.
   document.body.classList.toggle('has-dock',dock);
   document.body.classList.toggle('dock-over',dock&&TAB==='inicio');
-  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(PICK?shPick():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
+  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(PICK?shPick():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+(PANEL?shPanel():'')+
     (TOAST?`<div class="toast">${esc(TOAST)}</div>`:'');
   ['admin','cadete','cliente'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
-  document.body.style.overflow=(SEL||OP||PICK||ATRAS||CAL)?'hidden':'';
+  document.body.style.overflow=(SEL||OP||PICK||ATRAS||CAL||PANEL)?'hidden':'';
 }
 
 /* ===== eventos ===== */
@@ -1303,13 +1484,12 @@ document.addEventListener('click',ev=>{
   if(c('[data-close]')&&!c('.sh-b')){SEL=null;render();return}
   if(c('[data-closeop]')&&!c('.sh-b')){OP=null;render();return}
   if(c('[data-closepick]')&&!c('.sh-b')){PICK=null;render();return}
+  if(c('[data-closepanel]')&&!c('.sh-b')){PANEL=null;render();return}
+  const pnl=c('[data-panel]');if(pnl){PANEL=pnl.dataset.panel;render();return}
+  if(c('[data-mocksave]')){PANEL=null;toast('Cambio visual registrado');return}
 
   const ret=c('[data-retiro]');if(ret){OP={tipo:'retiro',envio:ret.dataset.retiro,sel:[],obs:''};SEL=null;render();return}
   const ent=c('[data-entrega]');if(ent){OP={tipo:'entrega',envio:ent.dataset.entrega,sel:[],obs:'',receptor:''};SEL=null;render();return}
-
-  if(c('#selall')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio),r=OP.tipo==='retiro';
-    const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
-    OP.sel=OP.sel.length===el.length?[]:el.map(p=>p.id);render();return}
 
   if(c('[data-fallo]')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio);
     e.paquetes.forEach(p=>{if(['pendiente','asignado','retirado','ruta'].includes(p.estado))p.estado='incidencia'});
@@ -1323,15 +1503,15 @@ document.addEventListener('click',ev=>{
     if(!r&&!(OP.receptor||'').trim()){OP.err='Poné el nombre de quien recibe.';render();
       setTimeout(()=>document.querySelector('#op-rec')?.focus(),60);return}
     const tot=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado)).length;
-    OP.sel.forEach(id=>{const p=e.paquetes.find(x=>x.id===id);if(p)p.estado=r?'retirado':'entregado'});
-    const n=OP.sel.length,pc=n<tot;
+    e.paquetes.forEach(p=>{if(r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado))p.estado=r?'retirado':'entregado'});
+    const n=tot,pc=false;
     if(r){e.custodia='Martín Rodríguez';
       e.hist.push(evt(`Retiro confirmado · ${n} de ${tot} bultos`,
-        `Custodia: remitente → Martín Rodríguez${pc?' · retiro parcial':''}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
+        `Custodia: remitente → Martín Rodríguez${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
     else{e.custodia=`Destinatario (${OP.receptor})`;
       e.hist.push(evt(`Entrega confirmada · ${n} de ${tot} bultos`,
-        `Recibió: ${OP.receptor}${pc?' · entrega parcial':''}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
-    sync(e);OP=null;toast(pc?`Parcial · ${n} de ${tot} bultos`:`${r?'Retiro':'Entrega'} confirmada ✓`);return}
+        `Recibió: ${OP.receptor}${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
+    sync(e);OP=null;toast(`${r?'Retiro':'Entrega'} confirmada ✓`);return}
 
   const add=c('[data-addto]');if(add){PICK={cadete:add.dataset.addto,sel:[]};render();return}
   if(c('#asignar-flow')){PICK={cadete:CAD.find(x=>x.disp).id,sel:[]};render();return}
@@ -1428,7 +1608,6 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='f-ret'){DRAFT.retiro=t.value;return}
   if(t.id==='f-ven'){DRAFT.ventana=t.value;return}
   if(t.id==='f-urg'){DRAFT.urgente=!!t.value;return}
-  if(t.dataset.pk&&OP){OP.sel=t.checked?[...OP.sel,t.dataset.pk]:OP.sel.filter(x=>x!==t.dataset.pk);render();return}
   if(t.dataset.pick&&PICK){PICK.sel=t.checked?[...PICK.sel,t.dataset.pick]:PICK.sel.filter(x=>x!==t.dataset.pick);render();return}
 });
 
@@ -1444,7 +1623,7 @@ document.addEventListener('input',e=>{const t=e.target;
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){
-  if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
+  if(PANEL)PANEL=null;else if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
 
 render();
 </script>
