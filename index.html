@@ -117,9 +117,10 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 .nav{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));
   z-index:50;display:flex;justify-content:center;padding:0 20px;pointer-events:none}
 .nav-in{display:flex;align-items:center;gap:3px;background:var(--nav-bg);border-radius:32px;
-  padding:7px;box-shadow:var(--sh-nav);pointer-events:auto;max-width:100%}
+  padding:7px;box-shadow:var(--sh-nav);pointer-events:auto;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.nav-in::-webkit-scrollbar{display:none}
 .nav button{min-height:46px;border-radius:26px;display:flex;align-items:center;gap:6px;
-  padding:0 11px;color:var(--nav-ink);font-size:13px;font-weight:700;position:relative}
+  padding:0 11px;color:var(--nav-ink);font-size:13px;font-weight:700;position:relative;flex:none}
 .nav button .icw{position:relative;display:grid;place-items:center;flex:none}
 .nav button .ic{font-size:17px;line-height:1}
 .nav button .lb{display:inline;white-space:nowrap}
@@ -624,6 +625,7 @@ button.otrodia:active{transform:scale(.99)}
     <button id="r-admin" aria-pressed="true">Admin</button>
     <button id="r-cadete" aria-pressed="false">Cadete</button>
     <button id="r-cliente" aria-pressed="false">Cliente</button>
+    <button id="r-futuro" aria-pressed="false">Futuro cliente</button>
   </div>
   <header class="hd">
     <div class="hd-top">
@@ -652,7 +654,7 @@ function jornadas(n=10){ // n días hábiles desde hoy
   return out;
 }
 const JORNADAS=jornadas(10);
-const ZONAS={mvd:{l:'Montevideo',precio:200},costa:{l:'Costa de Oro',precio:300}};
+const ZONAS={mvd:{l:'Montevideo',precio:200,estado:'Activa'},costa:{l:'Costa de Oro',precio:300,estado:'Activa'}};
 const diasCosta=f=>{const[y,m,d]=f.split('-').map(Number);return [1,3,5].includes(new Date(y,m-1,d).getDay())};
 const jornadasZona=z=>z==='costa'?JORNADAS.filter(diasCosta):JORNADAS;
 const precioZona=z=>(ZONAS[z]||ZONAS.mvd).precio;
@@ -686,9 +688,16 @@ const pill=e=>`<span class="pill ${ES[e].c}"><i class="dot"></i>${ES[e].l}</span
 const CAD=[{id:'c1',n:'Martín Rodríguez',v:'Moto',ic:'🛵',disp:true,base:'Bulevar Artigas 1825, Tres Cruces'},
   {id:'c2',n:'Pedro Suárez',v:'Auto',ic:'🚗',disp:true,base:'Av. Italia 6201, Carrasco'},
   {id:'c3',n:'Juan Pereyra',v:'Camioneta',ic:'🚚',disp:false,base:'Camino Carrasco 4680, Malvín Norte'}];
-const CLI=[{id:'cl1',n:'Boutique Amalia',tel:'099 123 456',dirs:['Av. Rivera 2456, Pocitos','Br. España 2100, Pocitos']},
-  {id:'cl2',n:'Tienda Nube MVD',tel:'098 777 321',dirs:['Av. Brasil 1900, Pocitos']},
-  {id:'cl3',n:'Farmacia del Centro',tel:'097 555 010',dirs:['18 de Julio 1420, Centro']}];
+const CLI=[{id:'cl1',n:'Boutique Amalia',tel:'099 123 456',email:'amalia@boutique.uy',estado:'habilitado',usuario:'ba.portal',dirs:['Av. Rivera 2456, Pocitos','Br. España 2100, Pocitos']},
+  {id:'cl2',n:'Tienda Nube MVD',tel:'098 777 321',email:'ventas@tiendanube.uy',estado:'habilitado',usuario:null,dirs:['Av. Brasil 1900, Pocitos']},
+  {id:'cl3',n:'Farmacia del Centro',tel:'097 555 010',email:'centro@farmacia.uy',estado:'habilitado',usuario:null,dirs:['18 de Julio 1420, Centro']},
+  {id:'cl4',n:'La Casa del Té',tel:'096 222 410',email:'hola@lacasadelte.uy',estado:'pendiente',usuario:'lacasadelte',dirs:['Luis Alberto de Herrera 1180, Buceo']}];
+const USERS=[
+  {id:'u1',nombre:'Fernando Coito',usuario:'fernando',rol:'Administrador',estado:'Habilitado'},
+  {id:'u2',nombre:'Martín Rodríguez',usuario:'martin.r',rol:'Repartidor / cadete',estado:'Habilitado'},
+  {id:'u3',nombre:'Boutique Amalia',usuario:'ba.portal',rol:'Cliente',estado:'Habilitado'},
+  {id:'u4',nombre:'La Casa del Té',usuario:'lacasadelte',rol:'Cliente',estado:'Pendiente'}
+];
 
 const evt=(t,d,w)=>({t,d,who:w,ts:nowISO()});
 function mk(o){const id=nextE();
@@ -745,10 +754,17 @@ let ENVIOS=[
 ];
 
 let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null,ROUTED=false,JORNADA=false,MOVE=null,JFILT='todos';
+let CUST=null,INC=null,EVID=null,CLIENT_DRAFT=null,ACCESS_MODE='login',PUBLIC_Q='',CONTROL='usuarios';
 let DIA=JORNADAS[0],ATRAS=null,CAL=false;
 let ROUTE_PLAN={c1:[],c2:[],c3:[]};
 let ROUTE_STOPS={c1:[],c2:[],c3:[]};
 let MAS=null; // {paso, cliente, filas[], excluidas[]}
+let AUDIT=[
+  evt('Cliente pendiente registrado','La Casa del Té quedó pendiente de habilitación','Sistema'),
+  evt('Usuario creado','Martín Rodríguez · Repartidor / cadete','Fernando C.'),
+  evt('Zona actualizada','Costa de Oro · tarifa $300','Fernando C.')
+];
+function audit(t,d,w='Admin'){AUDIT.unshift(evt(t,d,w)); if(AUDIT.length>40)AUDIT.pop()}
 
 /* Filas que simulan la lectura de una planilla. Incluyen casos inválidos
    y un duplicado, para poder probar E2, E3, A1 y A2. */
@@ -780,20 +796,26 @@ let PLANI={c1:[],c2:[],c3:[]};
 
 const NAV={
   admin:[{k:'inicio',l:'Inicio',i:'⌂'},{k:'envios',l:'Envíos',i:'▣'},
-    {k:'alta',l:'Nuevo',i:'+'},{k:'masiva',l:'Cargar',i:'⇧'},{k:'cadetes',l:'Equipo',i:'👥'}],
+    {k:'alta',l:'Nuevo',i:'+'},{k:'masiva',l:'Cargar',i:'⇧'},{k:'clientes',l:'Clientes',i:'◉'},
+    {k:'cadetes',l:'Equipo',i:'👥'},{k:'control',l:'Control',i:'▤'}],
   cadete:[{k:'tareas',l:'Tareas',i:'✓'},{k:'hoy',l:'Mi día',i:'📍'}],
-  cliente:[{k:'mis',l:'Envíos',i:'▣'},{k:'nuevo',l:'Pedir',i:'+'}]
+  cliente:[{k:'mis',l:'Envíos',i:'▣'},{k:'nuevo',l:'Pedir',i:'+'}],
+  futuro:[{k:'acceso',l:'Acceso',i:'↪'},{k:'publico',l:'Código',i:'#'}]
 };
 const HEAD={
   inicio:{t:'Organizá el día,<em>sin vueltas.</em>',s:'Distribuí los envíos pendientes entre tu equipo.'},
   envios:{t:'Buscá cualquier<em>envío.</em>',s:'Por código, cliente, destinatario o dirección.'},
   alta:{t:'Nuevo envío',s:'Cargá la solicitud paso a paso.'},
+  clientes:{t:'Clientes y<em>direcciones.</em>',s:'Alta, edición, direcciones y habilitación.'},
   cadetes:{t:'Tu equipo<em>de hoy.</em>',s:'Quién está libre y cuánto tiene asignado.'},
+  control:{t:'Control<em>operativo.</em>',s:'Usuarios, auditoría, reportes y parámetros.'},
   tareas:{t:'Tus entregas<em>de hoy.</em>',s:'Seguí el recorrido parada por parada.'},
   hoy:{t:'Cómo venís<em>hoy.</em>',s:'Tu avance de la jornada.'},
   mis:{t:'Seguí tus envíos<em>en tiempo real.</em>',s:'Estado actualizado de cada envío.'},
   nuevo:{t:'Pedir un envío',s:'Contanos qué hay que llevar y adónde.'},
-  masiva:{t:'Cargar<em>varios envíos.</em>',s:'Subí una planilla y creá todo de una vez.'}
+  masiva:{t:'Cargar<em>varios envíos.</em>',s:'Subí una planilla y creá todo de una vez.'},
+  acceso:{t:'Acceso de<em>clientes.</em>',s:'Inicio de sesión, registro y recuperación.'},
+  publico:{t:'Consulta por<em>código.</em>',s:'Seguimiento público con datos limitados.'}
 };
 
 const $=s=>document.querySelector(s);
@@ -1341,6 +1363,150 @@ function vCadetes(){
   <div class="note"><span class="ni">💡</span><div>Si un cadete tiene tareas activas, primero hay que reasignarlas antes de marcarlo ocupado.</div></div>`;
 }
 
+function clienteEstadoUI(c){
+  if(c.estado==='habilitado')return{cls:'p-ent',txt:'Habilitado',off:false,act:'Desactivar cliente'};
+  if(c.estado==='desactivado')return{cls:'p-inc',txt:'Desactivado',off:true,act:'Reactivar cliente'};
+  return{cls:'p-pend',txt:'Pendiente',off:true,act:'Habilitar cliente'};
+}
+
+function vClientes(){
+  const pend=CLI.filter(c=>c.estado==='pendiente');
+  const d=CLIENT_DRAFT||(CLIENT_DRAFT={n:'',tel:'',email:'',dir:'',usuario:false});
+  return `${pend.length?`<div class="hero"><div class="hero-k">Pendientes de habilitación</div>
+    <h4>${pend.length} cliente${pend.length>1?'s':''} esperando revisión</h4>
+    <p>Revisá los datos y habilitá solo cuando correspondan a un cliente válido.</p></div>`:''}
+  <div class="panel"><div class="panel-t">Registrar cliente por administrador</div>
+    <div class="field"><label for="cl-n">Nombre comercial o persona</label>
+      <input id="cl-n" value="${esc(d.n)}" placeholder="Ej. Librería Sur"></div>
+    <div class="grid2"><div class="field"><label for="cl-tel">Teléfono</label>
+      <input id="cl-tel" type="tel" value="${esc(d.tel)}" placeholder="09X XXX XXX"></div>
+      <div class="field"><label for="cl-email">Email</label>
+      <input id="cl-email" type="email" value="${esc(d.email)}" placeholder="contacto@empresa.uy"></div></div>
+    <div class="field"><label for="cl-dir">Dirección habitual de retiro</label>
+      <input id="cl-dir" value="${esc(d.dir)}" placeholder="Calle, número y barrio"></div>
+    <label class="checkline" for="cl-user"><input id="cl-user" type="checkbox" ${d.usuario?'checked':''}>
+      Crear también una cuenta de acceso al portal</label>
+    <button class="btn pri full" id="crear-cliente-admin" style="margin-top:14px">Registrar cliente habilitado</button>
+    <span class="hint" style="display:block;margin-top:10px">Si no se crea usuario, el cliente existe para operar internamente pero no ingresa al portal.</span>
+  </div>
+  <div class="sec"><div class="sec-h"><h3>Clientes</h3><span class="more">${CLI.length}</span></div>
+    ${CLI.map(c=>{const st=clienteEstadoUI(c);return `<div class="cd ${st.off?'off':''}"><div class="cd-h">
+      <div class="cd-av">${c.n.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+      <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
+        <div class="cd-v">${esc(c.tel)} · ${esc(c.email||'sin email')} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''}</div></div>
+      <span class="pill ${st.cls}"><i class="dot"></i>${st.txt}</span></div>
+      <div class="panel" style="margin-top:12px;box-shadow:none;background:var(--soft)">
+        <div class="panel-t">Direcciones habituales</div>
+        ${c.dirs.map((dir,i)=>`<div class="fila"><span class="fila-n">${i+1}</span>
+          <div class="fila-m"><div class="fila-t">${esc(dir)}</div><div class="fila-s">Disponible para nuevos envíos</div></div>
+          <button class="fila-x" data-dir-off="${c.id}|${i}" aria-label="Desactivar dirección">×</button></div>`).join('')}
+        <div class="field" style="margin-top:12px;margin-bottom:10px"><label for="dir-${c.id}">Agregar dirección</label>
+          <input id="dir-${c.id}" data-newdir="${c.id}" placeholder="Nueva dirección habitual"></div>
+        <button class="btn sm soft full" data-adddir="${c.id}">Agregar dirección</button>
+      </div>
+      <div class="btnrow" style="margin-top:12px">
+        ${c.estado==='pendiente'?`<button class="btn sm pri" data-habilitar="${c.id}">${st.act}</button>`:
+          `<button class="btn sm ${c.estado==='habilitado'?'danger':'pri'}" data-cliente-toggle="${c.id}">${st.act}</button>`}
+        <button class="btn sm soft" data-cliente-edit="${c.id}">Guardar cambios</button>
+      </div></div>`}).join('')}</div>`;
+}
+
+function vControl(){
+  const tabs=[['usuarios','Usuarios'],['auditoria','Auditoría'],['reportes','Reportes'],['zonas','Zonas']];
+  return `<div class="chips">${tabs.map(([k,l])=>`<button data-control="${k}" aria-pressed="${CONTROL===k}">${l}</button>`).join('')}</div>
+    ${CONTROL==='usuarios'?vUsuarios():CONTROL==='auditoria'?vAuditoria():CONTROL==='reportes'?vReportes():vZonas()}`;
+}
+
+function vUsuarios(){
+  return `<div class="sec"><div class="sec-h"><h3>Usuarios y roles</h3><span class="more">${USERS.length}</span></div>
+    ${USERS.map(u=>`<div class="cd ${u.estado!=='Habilitado'?'off':''}"><div class="cd-h">
+      <div class="cd-av">${u.nombre.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+      <div class="cd-m"><div class="cd-n">${esc(u.nombre)}</div><div class="cd-v">@${esc(u.usuario)} · ${esc(u.rol)}</div></div>
+      <span class="pill ${u.estado==='Habilitado'?'p-ent':'p-pend'}"><i class="dot"></i>${esc(u.estado)}</span></div>
+      <div class="btnrow" style="margin-top:12px">
+        <button class="btn sm soft" data-role="${u.id}">Cambiar rol</button>
+        <button class="btn sm ${u.estado==='Habilitado'?'danger':'pri'}" data-user-toggle="${u.id}">
+          ${u.estado==='Habilitado'?'Deshabilitar':'Habilitar'}</button></div></div>`).join('')}</div>
+    <div class="panel"><div class="panel-t">Crear usuario interno</div>
+      <div class="grid2"><div class="field"><label>Nombre</label><input value="Nueva operadora" readonly></div>
+      <div class="field"><label>Rol inicial</label><select><option>Administrador</option><option>Repartidor / cadete</option></select></div></div>
+      <button class="btn soft full" id="sim-user">Crear usuario simulado</button></div>`;
+}
+
+function vAuditoria(){
+  const rows=[...AUDIT,...ENVIOS.flatMap(e=>e.hist.map(h=>({...h,d:e.id+' · '+h.d})))].sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,12);
+  return `<div class="panel"><div class="panel-t">Filtros</div>
+    <div class="chips" style="margin:0"><button aria-pressed="true">Hoy</button><button>Usuarios</button><button>Envíos</button><button>Clientes</button></div></div>
+    <div class="panel"><div class="panel-t">Eventos recientes</div><div class="tl">
+    ${rows.map((h,i)=>`<div class="tl-i ${i===0?'hl':''}"><div class="tl-t">${esc(h.t)}</div>
+      <div class="tl-m">${esc(h.d)}</div><div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)} · ${esc(h.who)}</div></div>`).join('')}</div></div>`;
+}
+
+function vReportes(){
+  const total=ENVIOS.length,ent=ENVIOS.filter(e=>e.estado==='entregado').length,inc=ENVIOS.filter(e=>e.estado==='incidencia').length;
+  const porCliente=CLI.map(c=>({n:c.n,v:ENVIOS.filter(e=>e.cliente===c.n).length})).filter(x=>x.v);
+  return `<div class="stats"><div class="stat hi"><div class="n">${total}</div><div class="l">Envíos</div></div>
+    <div class="stat"><div class="n">${ent}</div><div class="l">Entregados</div></div>
+    <div class="stat"><div class="n">${inc}</div><div class="l">Incidencias</div></div>
+    <div class="stat"><div class="n">${CAD.filter(c=>c.disp).length}</div><div class="l">Cadetes disp.</div></div></div>
+    <div class="panel"><div class="panel-t">Envíos por cliente</div>
+      ${porCliente.map(x=>`<div class="fila"><span class="fila-n">${x.v}</span><div class="fila-m"><div class="fila-t">${esc(x.n)}</div><div class="fila-s">Período actual</div></div></div>`).join('')}</div>
+    <div class="btnrow"><button class="btn pri" id="export-pdf">Exportar PDF</button><button class="btn soft" id="export-xls">Exportar Excel</button></div>`;
+}
+
+function vZonas(){
+  return `<div class="sec">${Object.entries(ZONAS).map(([k,z])=>`<div class="cd"><div class="cd-h">
+      <div class="cd-av">${k.toUpperCase().slice(0,2)}</div>
+      <div class="cd-m"><div class="cd-n">${esc(z.l)}</div><div class="cd-v">Tarifa base $${z.precio} · ${esc(z.estado)}</div></div>
+      <span class="pill p-ent"><i class="dot"></i>${esc(z.estado)}</span></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn sm soft" data-zona="${k}|${z.precio+50}">Subir $50</button>
+      <button class="btn sm soft" data-zona="${k}|${Math.max(100,z.precio-50)}">Bajar $50</button></div></div>`).join('')}</div>
+    <div class="panel"><div class="panel-t">Regla de urgencia</div>
+      <div class="note"><span class="ni">⚡</span><div>Los envíos urgentes se destacan en planificación y vista del cadete. El recargo se valida con reglas comerciales.</div></div></div>`;
+}
+
+function vAcceso(){
+  if(ACCESS_MODE==='registro')return vRegistroFuturo();
+  if(ACCESS_MODE==='recuperar')return vRecuperar();
+  return `<div class="panel"><div class="panel-t">Iniciar sesión</div>
+    <div class="field"><label for="login-u">Usuario o email</label><input id="login-u" placeholder="usuario@empresa.uy" autocomplete="username"></div>
+    <div class="field"><label for="login-p">Contraseña</label><input id="login-p" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn pri full" id="login-ok">Entrar</button>
+    <div class="btnrow" style="margin-top:12px"><button class="btn soft" data-access="registro">Registrarme como cliente</button>
+    <button class="btn soft" data-access="recuperar">Olvidé mi contraseña</button></div></div>
+    <div class="note warn"><span class="ni">⏳</span><div>Si el cliente todavía está pendiente, el sistema muestra el aviso y no permite operar hasta la habilitación.</div></div>`;
+}
+
+function vRegistroFuturo(){
+  return `<button class="volver" data-access="login">‹ Volver al inicio de sesión</button>
+    <div class="panel"><div class="panel-t">Registro de cliente</div>
+    <div class="field"><label>Nombre comercial</label><input id="reg-n" placeholder="Ej. Emprendimiento Norte"></div>
+    <div class="grid2"><div class="field"><label>Teléfono</label><input id="reg-t" type="tel" placeholder="09X XXX XXX"></div>
+    <div class="field"><label>Email</label><input id="reg-e" type="email" placeholder="contacto@empresa.uy"></div></div>
+    <div class="field"><label>Dirección habitual de retiro</label><input id="reg-d" placeholder="Calle, número y barrio"></div>
+    <button class="btn pri full" id="registrar-futuro">Enviar registro</button>
+    <span class="hint" style="display:block;margin-top:10px">El registro queda pendiente hasta que Ohana lo habilite.</span></div>`;
+}
+
+function vRecuperar(){
+  return `<button class="volver" data-access="login">‹ Volver al inicio de sesión</button>
+    <div class="panel"><div class="panel-t">Recuperar contraseña</div>
+    <div class="field"><label for="rec-id">Usuario o email</label><input id="rec-id" placeholder="usuario@empresa.uy"></div>
+    <button class="btn pri full" id="recuperar-ok">Enviar instrucciones</button>
+    <span class="hint" style="display:block;margin-top:10px">La respuesta no confirma si la cuenta existe, para proteger los datos.</span></div>`;
+}
+
+function vPublico(){
+  const e=ENVIOS.find(x=>x.id.toLowerCase()===(PUBLIC_Q||'').toLowerCase());
+  return `<div class="search"><span class="ic">#</span><input id="public-q" value="${esc(PUBLIC_Q)}" placeholder="Ingresá el código del envío"></div>
+    ${PUBLIC_Q?e?`<div class="panel"><div class="panel-t">Estado público</div>
+      <dl class="kv"><dt>Código</dt><dd>${e.id}</dd><dt>Estado</dt><dd>${ES[e.estado].l}</dd>
+      <dt>Última actualización</dt><dd>${fch(lastEvt(e).ts)} ${hhmm(lastEvt(e).ts)}</dd></dl>
+      <div class="note"><span class="ni">ⓘ</span><div>Esta consulta no muestra custodia, cadete, teléfonos, comprobantes ni incidencias internas.</div></div></div>`:
+      '<div class="empty"><div class="ic">#</div><p>No encontramos un envío publicable</p><small>Revisá el código e intentá nuevamente.</small></div>':
+      '<div class="note"><span class="ni">#</span><div>Probá con un código existente, por ejemplo E-1053.</div></div>'}`;
+}
+
 function vTareas(){
   const m=enviosCadeteOrdenados('c1');
   const px=m[0],r=px&&px.estado==='asignado';
@@ -1440,9 +1606,65 @@ function shDet(){
           <div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)}${h.showWho?' · '+esc(h.who):''}</div></div>`).join('')}</div></div>
     </div>
     <div class="sh-f">
+      ${!cli&&['asignado','retirado','ruta','parcial','incidencia'].includes(e.estado)?`<button class="btn lg soft" data-custodia="${e.id}">Custodia</button>`:''}
+      ${!cli?`<button class="btn lg soft" data-incidencia="${e.id}">Incidencia</button>`:''}
+      ${!cli?`<button class="btn lg soft" data-evidencia="${e.id}">Evidencia</button>`:''}
       ${!cli&&e.estado==='asignado'?`<button class="btn lg pri" data-retiro="${e.id}">Confirmar retiro</button>`:''}
       ${!cli&&['retirado','ruta','parcial'].includes(e.estado)?`<button class="btn lg pri" data-entrega="${e.id}">Confirmar entrega</button>`:''}
       <button class="btn lg soft" data-close style="${!cli&&['asignado','retirado','ruta','parcial'].includes(e.estado)?'flex:0 0 92px':''}">Cerrar</button></div>
+  </div></div>`;
+}
+
+function shCustodia(){
+  if(!CUST)return'';
+  const e=ENVIOS.find(x=>x.id===CUST.envio);if(!e)return'';
+  const opts=['Depósito Ohana','Martín Rodríguez','Pedro Suárez','Juan Pereyra','Cliente/remitente'];
+  return `<div class="sh-bg" data-closecust><div class="sh" role="dialog" aria-label="Registrar custodia">
+    <div class="grab"></div><div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
+      <h3>Cambio de custodia</h3></div><button class="hd-b" data-closecust aria-label="Cerrar">×</button></div>
+    <div class="sh-b"><div class="panel"><dl class="kv"><dt>Custodia actual</dt><dd>${esc(e.custodia)}</dd>
+      <dt>Estado</dt><dd>${ES[e.estado].l}</dd></dl></div>
+      <div class="field"><label for="cust-to">Nuevo custodio o ubicación</label>
+        <select id="cust-to">${opts.map(o=>`<option ${CUST.to===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+      <div class="field"><label for="cust-obs">Observación</label>
+        <textarea id="cust-obs" placeholder="Ej. paquete queda en depósito por reprogramación">${esc(CUST.obs||'')}</textarea></div>
+      <div class="note"><span class="ni">↔</span><div>Este cambio no reasigna automáticamente el envío: registra quién tiene físicamente el paquete.</div></div></div>
+    <div class="sh-f"><button class="btn lg pri" id="confirm-custodia">Registrar custodia</button></div>
+  </div></div>`;
+}
+
+function shIncidencia(){
+  if(!INC)return'';
+  const e=ENVIOS.find(x=>x.id===INC.envio);if(!e)return'';
+  const tipos=['Destinatario ausente','Dirección incorrecta','Paquete dañado','Retiro fallido','Otro'];
+  return `<div class="sh-bg" data-closeinc><div class="sh" role="dialog" aria-label="Registrar incidencia">
+    <div class="grab"></div><div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
+      <h3>Registrar incidencia</h3></div><button class="hd-b" data-closeinc aria-label="Cerrar">×</button></div>
+    <div class="sh-b"><div class="field"><label for="inc-tipo">Tipo</label>
+      <select id="inc-tipo">${tipos.map(o=>`<option ${INC.tipo===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+      <div class="field"><label for="inc-desc">Descripción</label>
+        <textarea id="inc-desc" placeholder="Qué pasó y qué debería hacerse">${esc(INC.desc||'')}</textarea>
+        ${INC.err?`<div class="err">⚠ ${INC.err}</div>`:''}</div>
+      <div class="note warn"><span class="ni">!</span><div>El envío queda marcado con incidencia y se conserva el evento en el historial.</div></div></div>
+    <div class="sh-f"><button class="btn lg pri" id="confirm-incidencia">Guardar incidencia</button></div>
+  </div></div>`;
+}
+
+function shEvidencia(){
+  if(!EVID)return'';
+  const e=ENVIOS.find(x=>x.id===EVID.envio);if(!e)return'';
+  const tipos=['Foto de retiro','Foto de entrega','Firma','Comprobante físico','Otra evidencia'];
+  return `<div class="sh-bg" data-closeevid><div class="sh" role="dialog" aria-label="Registrar evidencia">
+    <div class="grab"></div><div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
+      <h3>Registrar evidencia</h3></div><button class="hd-b" data-closeevid aria-label="Cerrar">×</button></div>
+    <div class="sh-b"><div class="field"><label for="evid-tipo">Tipo de evidencia</label>
+      <select id="evid-tipo">${tipos.map(o=>`<option ${EVID.tipo===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+      <div class="panel"><div class="panel-t">Archivo</div>
+        <button class="btn soft full" id="evid-file">Seleccionar archivo</button>
+        <span class="hint" style="display:block;margin-top:10px">Foto, firma o documento. En el prototipo queda simulado.</span></div>
+      <div class="field"><label for="evid-obs">Detalle</label>
+        <textarea id="evid-obs" placeholder="Referencia breve">${esc(EVID.obs||'')}</textarea></div></div>
+    <div class="sh-f"><button class="btn lg pri" id="confirm-evidencia">Guardar evidencia</button></div>
   </div></div>`;
 }
 
@@ -1770,27 +1992,28 @@ function render(){
   $('#ttl').innerHTML=h.t; $('#sub').textContent=h.s;
   const who={admin:{av:'FC',l:'◔ Jornada de hoy',n:'Fernando Coito'},
     cadete:{av:'MR',l:'🛵 Moto · en ruta',n:'Martín Rodríguez'},
-    cliente:{av:'BA',l:'◷ Cliente',n:'Boutique Amalia'}}[ROL];
+    cliente:{av:'BA',l:'◷ Cliente',n:'Boutique Amalia'},
+    futuro:{av:'?',l:'◷ Acceso público',n:'Futuro cliente'}}[ROL];
   $('#av').textContent=who.av; $('#wl').textContent=who.l; $('#wn').textContent=who.n;
   const pend=ENVIOS.filter(e=>e.estado==='pendiente').length;
   $('#nav').innerHTML=items.map(i=>`<button data-tab="${i.k}" aria-pressed="${TAB===i.k}">
     <span class="icw"><span class="ic">${i.i}</span>
     ${i.k==='inicio'&&pend?`<span class="badge">${pend}</span>`:''}</span>
     <span class="lb">${i.l}</span></button>`).join('');
-  const V={inicio:vInicio,envios:vEnvios,alta:vAlta,cadetes:vCadetes,tareas:vTareas,hoy:vHoy,mis:vMis,
-    nuevo:vAlta,masiva:vMasiva};
+  const V={inicio:vInicio,envios:vEnvios,alta:vAlta,cadetes:vCadetes,clientes:vClientes,control:vControl,
+    tareas:vTareas,hoy:vHoy,mis:vMis,nuevo:vAlta,masiva:vMasiva,acceso:vAcceso,publico:vPublico};
   const html=(V[TAB]||vInicio)();
   $('#view').innerHTML=html;
   const dock=html.includes('class="dock"');
   // Formularios de admin/cliente mantienen la nav como salida; tareas operativas priorizan la acción.
-  const navOverDock=dock&&['inicio','alta','nuevo','masiva'].includes(TAB);
+  const navOverDock=dock&&['inicio','alta','nuevo','masiva','clientes','control','acceso'].includes(TAB);
   document.body.classList.toggle('has-dock',dock);
   document.body.classList.toggle('dock-over',navOverDock);
-  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(JORNADA?shJornada():'')+(PICK?shPick():'')+(MOVE?shMove():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
+  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(CUST?shCustodia():'')+(INC?shIncidencia():'')+(EVID?shEvidencia():'')+(JORNADA?shJornada():'')+(PICK?shPick():'')+(MOVE?shMove():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
     (CREATED?shCreated():'')+(LABEL?shLabel():'')+(PAY?shPay():'')+
     (TOAST?`<div class="toast">${esc(TOAST)}</div>`:'');
-  ['admin','cadete','cliente'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
-  document.body.style.overflow=(SEL||OP||PICK||MOVE||JORNADA||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
+  ['admin','cadete','cliente','futuro'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
+  document.body.style.overflow=(SEL||OP||CUST||INC||EVID||PICK||MOVE||JORNADA||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
 }
 
 /* ===== eventos ===== */
@@ -1800,7 +2023,7 @@ document.addEventListener('click',ev=>{
   if(c('#theme')){const r=document.documentElement;
     const dk=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme:dark)').matches);
     r.setAttribute('data-theme',dk?'light':'dark');return}
-  for(const r of ['admin','cadete','cliente'])if(c('#r-'+r)){ROL=r;SEL=OP=PICK=MOVE=null;JORNADA=false;DRAFT=null;
+  for(const r of ['admin','cadete','cliente','futuro'])if(c('#r-'+r)){ROL=r;SEL=OP=CUST=INC=EVID=PICK=MOVE=null;JORNADA=false;DRAFT=null;
     TAB=NAV[r][0].k;topPage();render();return}
   const tb=c('[data-tab]');if(tb){TAB=tb.dataset.tab;topPage();render();return}
   const go=c('[data-go]');if(go){
@@ -1808,12 +2031,62 @@ document.addEventListener('click',ev=>{
     else if(go.dataset.go==='atrasados'){TAB='envios';vEnvios.f='atrasados';vEnvios.q=''}
     else TAB=go.dataset.go;
     topPage();render();return}
+  const ctl=c('[data-control]');if(ctl){CONTROL=ctl.dataset.control;render();return}
+  const acc=c('[data-access]');if(acc){ACCESS_MODE=acc.dataset.access;render();return}
+  if(c('#login-ok')){toast('Ingreso simulado');return}
+  if(c('#recuperar-ok')){audit('Solicitud de recuperación','Se enviaron instrucciones sin exponer si la cuenta existe','Sistema');
+    ACCESS_MODE='login';toast('Instrucciones enviadas');return}
+  if(c('#registrar-futuro')){
+    const n=$('#reg-n')?.value.trim()||'Nuevo cliente',tel=$('#reg-t')?.value.trim()||'Sin teléfono',
+      email=$('#reg-e')?.value.trim()||'',dir=$('#reg-d')?.value.trim()||'Dirección pendiente';
+    const id='cl'+(CLI.length+1),usuario=(email.split('@')[0]||n.toLowerCase().replace(/\s+/g,'.')).slice(0,18);
+    CLI.push({id,n,tel,email,estado:'pendiente',usuario,dirs:[dir]});
+    USERS.push({id:'u'+(USERS.length+1),nombre:n,usuario,rol:'Cliente',estado:'Pendiente'});
+    audit('Cliente pendiente registrado',`${n} quedó pendiente de habilitación`,'Sistema');
+    ACCESS_MODE='login';toast('Registro enviado para revisión');render();return}
+  if(c('#crear-cliente-admin')){
+    const d=CLIENT_DRAFT||(CLIENT_DRAFT={});
+    if(!d.n?.trim()){toast('Ingresá el nombre del cliente');return}
+    const id='cl'+(CLI.length+1),usuario=d.usuario?(d.email?.split('@')[0]||d.n.toLowerCase().replace(/\s+/g,'.')).slice(0,18):null;
+    CLI.push({id,n:d.n.trim(),tel:d.tel?.trim()||'Sin teléfono',email:d.email?.trim()||'',estado:'habilitado',usuario,dirs:[d.dir?.trim()||'Dirección pendiente']});
+    if(usuario)USERS.push({id:'u'+(USERS.length+1),nombre:d.n.trim(),usuario,rol:'Cliente',estado:'Habilitado'});
+    audit('Cliente registrado',`${d.n.trim()} · ${usuario?'con usuario':'sin usuario de portal'}`,'Admin');
+    CLIENT_DRAFT={n:'',tel:'',email:'',dir:'',usuario:false};toast('Cliente registrado');render();return}
+  const hab=c('[data-habilitar]');if(hab){const cl=CLI.find(x=>x.id===hab.dataset.habilitar);
+    if(cl){cl.estado='habilitado';const u=USERS.find(x=>x.usuario===cl.usuario);if(u)u.estado='Habilitado';
+      audit('Cliente habilitado',cl.n,'Admin');toast('Cliente habilitado');render()}return}
+  const ctog=c('[data-cliente-toggle]');if(ctog){const cl=CLI.find(x=>x.id===ctog.dataset.clienteToggle);
+    if(cl){cl.estado=cl.estado==='habilitado'?'desactivado':'habilitado';
+      const u=USERS.find(x=>x.usuario===cl.usuario);if(u)u.estado=cl.estado==='habilitado'?'Habilitado':'Deshabilitado';
+      audit('Cliente actualizado',`${cl.n} · ${cl.estado}`,'Admin');render()}return}
+  const cedit=c('[data-cliente-edit]');if(cedit){const cl=CLI.find(x=>x.id===cedit.dataset.clienteEdit);
+    if(cl){audit('Cliente actualizado',cl.n,'Admin');toast('Cambios guardados')}return}
+  const dirOff=c('[data-dir-off]');if(dirOff){const [id,ix]=dirOff.dataset.dirOff.split('|'),cl=CLI.find(x=>x.id===id);
+    if(cl&&cl.dirs.length>1){const d=cl.dirs.splice(Number(ix),1)[0];audit('Dirección desactivada',`${cl.n} · ${d}`,'Admin');render()}
+    else toast('Debe quedar al menos una dirección');return}
+  const addDir=c('[data-adddir]');if(addDir){const cl=CLI.find(x=>x.id===addDir.dataset.adddir),
+    inp=document.querySelector(`[data-newdir="${addDir.dataset.adddir}"]`),dir=inp?.value.trim();
+    if(cl&&dir){cl.dirs.push(dir);audit('Dirección agregada',`${cl.n} · ${dir}`,'Admin');toast('Dirección agregada');render()}
+    else toast('Ingresá una dirección');return}
+  const role=c('[data-role]');if(role){const u=USERS.find(x=>x.id===role.dataset.role),roles=['Administrador','Repartidor / cadete','Cliente'];
+    if(u){u.rol=roles[(roles.indexOf(u.rol)+1)%roles.length];audit('Rol actualizado',`${u.nombre} · ${u.rol}`,'Admin');render()}return}
+  const utog=c('[data-user-toggle]');if(utog){const u=USERS.find(x=>x.id===utog.dataset.userToggle);
+    if(u){u.estado=u.estado==='Habilitado'?'Deshabilitado':'Habilitado';audit('Usuario actualizado',`${u.nombre} · ${u.estado}`,'Admin');render()}return}
+  if(c('#sim-user')){USERS.push({id:'u'+(USERS.length+1),nombre:'Nueva operadora',usuario:'operadora.'+(USERS.length+1),rol:'Administrador',estado:'Habilitado'});
+    audit('Usuario creado','Nueva operadora · Administrador','Admin');toast('Usuario creado');render();return}
+  if(c('#export-pdf')||c('#export-xls')){const tipo=c('#export-pdf')?'PDF':'Excel';
+    audit('Reporte exportado','Formato '+tipo,'Admin');toast('Reporte '+tipo+' exportado');return}
+  const zona=c('[data-zona]');if(zona){const [k,precio]=zona.dataset.zona.split('|');
+    if(ZONAS[k]){ZONAS[k].precio=Number(precio);audit('Zona actualizada',`${ZONAS[k].l} · tarifa $${ZONAS[k].precio}`,'Admin');render()}return}
   const op=c('[data-open]');if(op){const e=ENVIOS.find(x=>x.id===op.dataset.open);
     if(ROL==='admin'&&e&&esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)){
       ATRAS=e.id;JORNADA=false;render();return}
     SEL=op.dataset.open;JORNADA=false;render();return}
   if(closeHit('[data-close]')){SEL=null;render();return}
   if(closeHit('[data-closeop]')){OP=null;render();return}
+  if(closeHit('[data-closecust]')){CUST=null;render();return}
+  if(closeHit('[data-closeinc]')){INC=null;render();return}
+  if(closeHit('[data-closeevid]')){EVID=null;render();return}
   if(closeHit('[data-closepick]')){PICK=null;render();return}
   if(closeHit('[data-closemove]')){MOVE=null;render();return}
   if(closeHit('[data-closejornada]')){JORNADA=false;render();return}
@@ -1823,6 +2096,25 @@ document.addEventListener('click',ev=>{
 
   const ret=c('[data-retiro]');if(ret){OP={tipo:'retiro',envio:ret.dataset.retiro,obs:''};SEL=null;render();return}
   const ent=c('[data-entrega]');if(ent){OP={tipo:'entrega',envio:ent.dataset.entrega,obs:'',receptor:''};SEL=null;render();return}
+  const cu=c('[data-custodia]');if(cu){const e=ENVIOS.find(x=>x.id===cu.dataset.custodia);
+    CUST={envio:cu.dataset.custodia,to:e?.custodia||'Depósito Ohana',obs:''};SEL=null;render();return}
+  const incb=c('[data-incidencia]');if(incb){INC={envio:incb.dataset.incidencia,tipo:'Destinatario ausente',desc:''};SEL=null;render();return}
+  const evb=c('[data-evidencia]');if(evb){EVID={envio:evb.dataset.evidencia,tipo:'Foto de entrega',obs:''};SEL=null;render();return}
+
+  if(c('#confirm-custodia')&&CUST){const e=ENVIOS.find(x=>x.id===CUST.envio);
+    if(e&&CUST.to&&CUST.to!==e.custodia){const old=e.custodia;e.custodia=CUST.to;
+      e.hist.push(evt('Cambio de custodia',`${old} → ${CUST.to}${CUST.obs?' · '+CUST.obs:''}`,'Admin'));
+      audit('Cambio de custodia',`${e.id} · ${old} → ${CUST.to}`,'Admin');CUST=null;toast('Custodia registrada')}
+    else{toast('La custodia indicada ya es la actual')}return}
+  if(c('#confirm-incidencia')&&INC){const e=ENVIOS.find(x=>x.id===INC.envio);
+    if(!INC.desc.trim()){INC.err='Agregá una descripción breve.';render();return}
+    if(e){e.estado='incidencia';e.paquetes.forEach(p=>{if(p.estado!=='entregado')p.estado='incidencia'});
+      e.hist.push(evt('Incidencia registrada',`${INC.tipo} · ${INC.desc}`,'Admin'));
+      audit('Incidencia registrada',`${e.id} · ${INC.tipo}`,'Admin');INC=null;toast('Incidencia registrada')}return}
+  if(c('#evid-file')&&EVID){toast('Archivo seleccionado');return}
+  if(c('#confirm-evidencia')&&EVID){const e=ENVIOS.find(x=>x.id===EVID.envio);
+    if(e){e.hist.push(evt('Evidencia registrada',`${EVID.tipo}${EVID.obs?' · '+EVID.obs:''}`,'Admin'));
+      audit('Evidencia registrada',`${e.id} · ${EVID.tipo}`,'Admin');EVID=null;toast('Evidencia guardada')}return}
 
   if(c('[data-fallo]')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio);
     e.paquetes.forEach(p=>{if(['pendiente','asignado','retirado','ruta'].includes(p.estado))p.estado='incidencia'});
@@ -1991,6 +2283,10 @@ document.addEventListener('click',ev=>{
 
 document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='m-cli'&&MAS){MAS.cliente=t.value;MAS.err=null;render();return}
+  if(t.id==='cl-user'&&CLIENT_DRAFT){CLIENT_DRAFT.usuario=t.checked;return}
+  if(t.id==='cust-to'&&CUST){CUST.to=t.value;return}
+  if(t.id==='inc-tipo'&&INC){INC.tipo=t.value;return}
+  if(t.id==='evid-tipo'&&EVID){EVID.tipo=t.value;return}
   if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;render();return}
   if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
   if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
@@ -2006,6 +2302,15 @@ document.addEventListener('change',e=>{const t=e.target;
 document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){vEnvios.q=t.value;const p=t.selectionStart;render();
     const n=document.querySelector('#q');if(n){n.focus();n.setSelectionRange(p,p)}return}
+  if(t.id==='public-q'){PUBLIC_Q=t.value;const p=t.selectionStart;render();
+    const n=document.querySelector('#public-q');if(n){n.focus();n.setSelectionRange(p,p)}return}
+  if(t.id==='cl-n'&&CLIENT_DRAFT)CLIENT_DRAFT.n=t.value;
+  if(t.id==='cl-tel'&&CLIENT_DRAFT)CLIENT_DRAFT.tel=t.value;
+  if(t.id==='cl-email'&&CLIENT_DRAFT)CLIENT_DRAFT.email=t.value;
+  if(t.id==='cl-dir'&&CLIENT_DRAFT)CLIENT_DRAFT.dir=t.value;
+  if(t.id==='cust-obs'&&CUST)CUST.obs=t.value;
+  if(t.id==='inc-desc'&&INC){INC.desc=t.value;INC.err=null}
+  if(t.id==='evid-obs'&&EVID)EVID.obs=t.value;
   if(t.dataset.base){
     const c=CAD.find(x=>x.id===t.dataset.base);
     if(c)c.base=t.value;
@@ -2025,7 +2330,7 @@ document.addEventListener('input',e=>{const t=e.target;
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){
-  if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(MOVE)MOVE=null;else if(JORNADA)JORNADA=false;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
+  if(CAL)CAL=false;else if(ATRAS)ATRAS=null;else if(EVID)EVID=null;else if(INC)INC=null;else if(CUST)CUST=null;else if(MOVE)MOVE=null;else if(JORNADA)JORNADA=false;else if(PICK)PICK=null;else if(OP)OP=null;else if(SEL)SEL=null;else return;render()}});
 
 render();
 </script>

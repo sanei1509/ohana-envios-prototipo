@@ -20,13 +20,14 @@ Está diseñado **mobile-first** — se ve mejor en un teléfono o con las herra
 
 ## Roles
 
-El selector de arriba cambia entre los tres perfiles:
+El selector de arriba cambia entre cuatro perfiles:
 
 | Rol | Qué hace |
 |---|---|
 | **Admin** | Fernando: planifica jornadas, asigna cadetes, carga envíos y planillas |
 | **Cadete** | Martín: ve sus tareas, confirma retiros y entregas |
 | **Cliente** | Boutique Amalia: consulta el estado de sus envíos |
+| **Futuro cliente** | Acceso público: login, registro, recuperación y consulta por código |
 
 ## Casos de uso cubiertos
 
@@ -38,11 +39,24 @@ El selector de arriba cambia entre los tres perfiles:
 | CU04 | Asignar o reasignar envío | Admin → Inicio → Asignar |
 | CU05 | Consultar tareas asignadas | Cadete → Tareas |
 | CU06 | Confirmar retiro | Cadete → Confirmar retiro |
+| CU07 | Registrar cambio de custodia | Detalle de envío → Custodia |
 | CU08 | Confirmar entrega | Cadete → Confirmar entrega |
 | CU09 | Cargar envíos masivamente | Admin → Cargar |
 | CU11 | Consultar historial del envío | Detalle de cualquier envío |
+| CU12 | Gestionar clientes y direcciones | Admin → Clientes |
 | CU13 | Gestionar repartidores | Admin → Equipo |
 | CU14 | Consultar envíos del cliente | Cliente → Envíos |
+| CU15 | Gestionar usuarios y roles | Admin → Control → Usuarios |
+| CU16 | Consultar auditoría | Admin → Control → Auditoría |
+| CU17 | Recuperar contraseña | Futuro cliente → Acceso → Olvidé mi contraseña |
+| CU18 | Registrar cliente por administrador | Admin → Clientes |
+| CU19 | Registrarse como cliente | Futuro cliente → Acceso → Registrarme como cliente |
+| CU20 | Registrar incidencia | Detalle de envío → Incidencia |
+| CU22 | Registrar evidencia | Detalle de envío → Evidencia |
+| CU24 | Consultar reportes operativos | Admin → Control → Reportes |
+| CU25 | Exportar reportes | Admin → Control → Reportes |
+| CU26 | Consultar envío mediante código público | Futuro cliente → Código |
+| CU27 | Gestionar zonas, tarifas y urgencias | Admin → Control → Zonas |
 
 ## Decisiones de dominio que el prototipo hace visibles
 
@@ -54,12 +68,12 @@ El selector de arriba cambia entre los tres perfiles:
 
 **Planificación por jornada.** Los envíos traen fecha de retiro desde el alta. Se puede planificar hoy, mañana o cualquier día hábil de las próximas dos semanas. Los envíos que quedaron sin resolver de días anteriores aparecen marcados, con dos salidas: reprogramar o devolver al remitente.
 
-## Qué NO incluye
+## Alcance del prototipo
 
-- Persistencia: al recargar vuelve al estado inicial
-- Autenticación real
-- Integración con servicios de rutas (Circuit u otros)
-- Etiquetas imprimibles, portal público, notificaciones y reportes
+- Persistencia: al recargar vuelve al estado inicial.
+- Autenticación, recuperación de contraseña y exportación de reportes están simuladas.
+- Integración con servicios de rutas (Circuit u otros) está representada como optimización simulada.
+- Etiquetas, comprobantes, evidencias y reportes son pantallas navegables sin backend ni archivos reales.
 
 ## Preguntas abiertas para el cliente
 
