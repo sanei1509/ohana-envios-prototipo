@@ -270,14 +270,45 @@ body.dock-over .dock{bottom:var(--navh);padding-bottom:10px;
 .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
 .field label{font-size:13.5px;font-weight:700;color:var(--ink-2);letter-spacing:-.01em}
 .field input,.field select,.field textarea{min-height:var(--tap);border:1.5px solid transparent;
-  background:var(--soft);border-radius:15px;padding:13px 16px;font-size:16px;width:100%;color:var(--ink)}
+  background:var(--soft);border-radius:15px;padding:13px 16px;font-size:16px;width:100%;color:var(--ink);
+  box-shadow:inset 0 0 0 1px rgba(22,34,28,.03)}
 .field textarea{min-height:82px;resize:vertical;line-height:1.45}
 .field select{appearance:none;
-  background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
-  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;
-  background-repeat:no-repeat;padding-right:44px}
+  background-image:linear-gradient(45deg,transparent 50%,var(--brand) 50%),linear-gradient(135deg,var(--brand) 50%,transparent 50%),linear-gradient(var(--card),var(--card));
+  background-position:calc(100% - 25px) 50%,calc(100% - 18px) 50%,calc(100% - 44px) 50%;
+  background-size:7px 7px,7px 7px,1px 28px;background-repeat:no-repeat;
+  padding-right:58px;font-weight:650;cursor:pointer}
+.field select:disabled{opacity:.58;cursor:not-allowed;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%),linear-gradient(var(--line),var(--line))}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);
   background:var(--card);outline:none}
+.selectlist{display:flex;flex-direction:column;gap:8px}
+.selectopt{width:100%;min-height:52px;border-radius:15px;background:var(--soft);padding:12px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;
+  font-size:15.5px;font-weight:750;color:var(--ink);border:1.5px solid transparent}
+.selectopt:active{transform:scale(.99)}
+.selectopt.on{background:var(--card);border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 12%,transparent)}
+.selectopt.add{color:var(--brand);background:var(--brand-soft)}
+.selectopt[disabled]{opacity:.55;cursor:not-allowed}
+.selectopt .sub{display:block;font-size:12px;font-weight:650;color:var(--ink-3);margin-top:2px}
+.selectopt .mark{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:var(--on-solid);font-size:12px}
+.selectopt.on .mark{background:var(--brand);border-color:var(--brand)}
+.combo{position:relative}
+.combo-btn{width:100%;min-height:var(--tap);border-radius:15px;background:var(--soft);padding:12px 48px 12px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border:1.5px solid transparent;
+  font-size:15.5px;font-weight:750;color:var(--ink);position:relative}
+.combo-btn::after{content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;
+  border-right:2px solid var(--brand);border-bottom:2px solid var(--brand);transform:translateY(-65%) rotate(45deg)}
+.combo.open .combo-btn{background:var(--card);border-color:var(--brand)}
+.combo-btn:disabled{opacity:.58;cursor:not-allowed}
+.combo-menu{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:70;background:var(--card);
+  border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh-md);padding:10px;display:flex;flex-direction:column;gap:8px}
+.combo-search{position:relative}
+.combo-search input{width:100%;min-height:46px;border:0;background:var(--soft);border-radius:13px;
+  padding:0 14px 0 38px;font-size:15px;color:var(--ink);font-weight:650}
+.combo-search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-size:15px}
+.combo-options{display:flex;flex-direction:column;gap:7px;max-height:230px;overflow:auto;padding-right:2px}
+.combo .selectopt{min-height:48px;box-shadow:none}
+.combo-primary{border-bottom:1px solid var(--line);padding-bottom:8px}
 .hint{font-size:12.5px;color:var(--ink-3);line-height:1.4}
 .err{font-size:13px;color:var(--bad);font-weight:700;display:flex;gap:6px;align-items:flex-start}
 .checkline{display:flex;align-items:center;gap:10px;color:var(--ink-2);font-size:13.5px;font-weight:700}
@@ -754,7 +785,7 @@ let ENVIOS=[
 ];
 
 let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null,ROUTED=false,JORNADA=false,MOVE=null,JFILT='todos';
-let CUST=null,INC=null,EVID=null,CLIENT_DRAFT=null,ACCESS_MODE='login',PUBLIC_Q='',CONTROL='usuarios';
+let CUST=null,INC=null,EVID=null,CLIENT_DRAFT=null,CLIENT_FILTER='todos',ACCESS_MODE='login',PUBLIC_Q='',CONTROL='usuarios';
 let DIA=JORNADAS[0],ATRAS=null,CAL=false;
 let ROUTE_PLAN={c1:[],c2:[],c3:[]};
 let ROUTE_STOPS={c1:[],c2:[],c3:[]};
@@ -1131,18 +1162,60 @@ function vAlta(){
   const d=DRAFT||(DRAFT={paso:1,cliente:ROL==='cliente'?'Boutique Amalia':'',retiro:'',retiroNuevo:'',
     dest:'',tel:'',entregaCosta:{loc:'Solymar',otra:'',calle:'',manzana:'',solar:'',desc:''},
     entrega:'',zona:'mvd',fecha:JORNADAS[0],ventana:'',notas:'',urgente:false,fragil:false,
-    favRetiro:false,paquetes:[{tam:'M'}],err:{}});
+    favRetiro:false,clienteNuevo:{n:'',tel:'',email:'',dir:'',usuario:false},paquetes:[{tam:'M'}],err:{}});
   const frDisp=franjasDisponibles(d.fecha);
   const ps=['Cliente','Destino','Bultos','Revisar'];
   let b='';
-  if(d.paso===1){const cl=CLI.find(c=>c.n===d.cliente);
-    b=`<div class="field"><label for="f-cli">¿Quién envía?</label>
-      <select id="f-cli"><option value="">Elegí un cliente…</option>
-      ${CLI.map(c=>`<option ${d.cliente===c.n?'selected':''}>${esc(c.n)}</option>`).join('')}</select>
+  if(d.paso===1){const nuevo=d.cliente==='__nuevo__',cl=nuevo?null:CLI.find(c=>c.n===d.cliente),hab=CLI.filter(c=>c.estado==='habilitado');
+    const q=(d.clienteQ||'').toLowerCase().trim(),rq=(d.retiroQ||'').toLowerCase().trim();
+    const clientesFiltrados=hab.filter(c=>(c.n+' '+c.tel+' '+(c.email||'')).toLowerCase().includes(q));
+    const retirosFiltrados=cl?cl.dirs.filter(x=>x.toLowerCase().includes(rq)):[];
+    b=`<div class="field"><label>¿Quién envía?</label>
+      <div class="combo ${d.clienteOpen?'open':''}">
+        <button class="combo-btn" data-combo="cliente" type="button">
+          <span>${nuevo?'Registrar cliente nuevo':d.cliente?esc(d.cliente):'Elegí un cliente...'}<span class="sub">${nuevo?'Carga rápida desde este envío':cl?`${cl.dirs.length} dirección${cl.dirs.length>1?'es':''} de retiro`:'Buscá por nombre, teléfono o email'}</span></span>
+        </button>
+        ${d.clienteOpen?`<div class="combo-menu">
+          <div class="combo-search"><span class="ic">⌕</span><input id="cli-search" inputmode="search" value="${esc(d.clienteQ||'')}" placeholder="Buscar cliente..."></div>
+          ${ROL==='admin'?`<div class="combo-primary"><button class="selectopt add ${nuevo?'on':''}" data-cli-pick="__nuevo__" type="button">
+            <span>+ Registrar cliente nuevo<span class="sub">Crear cliente mientras se carga el envío</span></span><span class="mark">${nuevo?'✓':''}</span></button></div>`:''}
+          <div class="combo-options" role="listbox" aria-label="Cliente que envía">
+            ${clientesFiltrados.length?clientesFiltrados.map(c=>`<button class="selectopt ${d.cliente===c.n?'on':''}" data-cli-pick="${esc(c.n)}" type="button">
+              <span>${esc(c.n)}<span class="sub">${esc(c.tel)} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''}</span></span><span class="mark">${d.cliente===c.n?'✓':''}</span></button>`).join(''):
+              '<div class="empty" style="padding:14px"><p>No hay coincidencias</p><small>Podés registrar el cliente nuevo.</small></div>'}
+          </div>
+        </div>`:''}
+      </div>
       ${d.err.cliente?`<div class="err">⚠ ${d.err.cliente}</div>`:''}</div>
-      <div class="field"><label for="f-ret">¿De dónde lo retiramos?</label>
-      <select id="f-ret" ${cl?'':'disabled'}><option value="">${cl?'Elegí una dirección favorita…':'Primero elegí el cliente'}</option>
-      ${cl?cl.dirs.map(x=>`<option ${d.retiro===x?'selected':''}>${esc(x)}</option>`).join(''):''}</select>
+      ${nuevo?`<div class="panel" style="box-shadow:none;background:var(--soft);margin-bottom:16px">
+        <div class="panel-t">Nuevo cliente</div>
+        <div class="field"><label for="f-cl-new-n">Nombre comercial o persona</label>
+          <input id="f-cl-new-n" value="${esc(d.clienteNuevo.n)}" placeholder="Ej. Librería Sur"></div>
+        <div class="grid2"><div class="field"><label for="f-cl-new-tel">Teléfono</label>
+          <input id="f-cl-new-tel" type="tel" value="${esc(d.clienteNuevo.tel)}" placeholder="09X XXX XXX"></div>
+          <div class="field"><label for="f-cl-new-email">Email</label>
+          <input id="f-cl-new-email" type="email" value="${esc(d.clienteNuevo.email)}" placeholder="contacto@empresa.uy"></div></div>
+        <div class="field"><label for="f-cl-new-dir">Dirección habitual de retiro</label>
+          <input id="f-cl-new-dir" value="${esc(d.clienteNuevo.dir)}" placeholder="Calle, número y barrio" autocomplete="street-address">
+          ${d.err.retiro?`<div class="err">⚠ ${d.err.retiro}</div>`:''}</div>
+        <label class="checkline" for="f-cl-new-user"><input id="f-cl-new-user" type="checkbox" ${d.clienteNuevo.usuario?'checked':''}>
+          Crear también una cuenta de acceso al portal</label>
+        <span class="hint" style="display:block;margin-top:10px">El cliente queda habilitado para este envío. El usuario de portal es opcional.</span>
+      </div>`:
+      `<div class="field"><label>¿De dónde lo retiramos?</label>
+      <div class="combo ${d.retiroOpen?'open':''}">
+        <button class="combo-btn" data-combo="retiro" type="button" ${cl?'':'disabled'}>
+          <span>${d.retiro?esc(d.retiro):(cl?'Elegí una dirección favorita...':'Primero elegí el cliente')}<span class="sub">${cl?'También podés escribir una nueva dirección abajo':'Seleccioná un cliente para ver direcciones'}</span></span>
+        </button>
+        ${d.retiroOpen&&cl?`<div class="combo-menu">
+          <div class="combo-search"><span class="ic">⌕</span><input id="ret-search" inputmode="search" value="${esc(d.retiroQ||'')}" placeholder="Buscar dirección..."></div>
+          <div class="combo-options" role="listbox" aria-label="Dirección de retiro">
+            ${retirosFiltrados.length?retirosFiltrados.map(x=>`<button class="selectopt ${d.retiro===x?'on':''}" data-ret-pick="${esc(x)}" type="button">
+              <span>${esc(x)}</span><span class="mark">${d.retiro===x?'✓':''}</span></button>`).join(''):
+              '<div class="empty" style="padding:14px"><p>No hay coincidencias</p><small>Escribí una dirección nueva abajo.</small></div>'}
+          </div>
+        </div>`:''}
+      </div>
       <span class="hint">Direcciones favoritas de retiro guardadas para este cliente.</span></div>
       ${d.retiro?'':`<div class="field"><label for="f-ret-new">Ingresar una nueva dirección de retiro</label>
       <input id="f-ret-new" value="${esc(d.retiroNuevo)}" placeholder="${cl?'Calle, número y barrio':'Primero elegí el cliente'}"
@@ -1152,7 +1225,7 @@ function vAlta(){
         Marcar esta dirección como favorita
       </label>
       <span class="hint">Si escribís una nueva dirección, se usará en lugar de la favorita seleccionada.</span>
-      ${d.err.retiro?`<div class="err">⚠ ${d.err.retiro}</div>`:''}</div>`}`;
+      ${d.err.retiro?`<div class="err">⚠ ${d.err.retiro}</div>`:''}</div>`}`}`;
   }else if(d.paso===2){
     const fechas=jornadasZona(d.zona);
     if(!fechas.includes(d.fecha))d.fecha=fechas[0];
@@ -1228,7 +1301,8 @@ function vAlta(){
         <span class="tog-sw"><i></i></span>
       </button>`;
   }else{
-    b=`<dl class="kv"><dt>Envía</dt><dd>${esc(d.cliente)}</dd>
+    const nomCliente=d.cliente==='__nuevo__'?d.clienteNuevo.n:d.cliente;
+    b=`<dl class="kv"><dt>Envía</dt><dd>${esc(nomCliente)}</dd>
       <dt>Retiro</dt><dd>${esc(d.retiro)}</dd>
       <dt>Recibe</dt><dd>${esc(d.dest)}${d.tel?'<br><span class="hint">'+esc(d.tel)+'</span>':''}</dd>
       <dt>Entrega</dt><dd>${esc(d.entrega)}</dd>
@@ -1366,15 +1440,16 @@ function vCadetes(){
 function clienteEstadoUI(c){
   if(c.estado==='habilitado')return{cls:'p-ent',txt:'Habilitado',off:false,act:'Desactivar cliente'};
   if(c.estado==='desactivado')return{cls:'p-inc',txt:'Desactivado',off:true,act:'Reactivar cliente'};
-  return{cls:'p-pend',txt:'Pendiente',off:true,act:'Habilitar cliente'};
+  return{cls:'p-pend',txt:'Pendiente',off:false,act:'Habilitar cliente'};
 }
 
 function vClientes(){
   const pend=CLI.filter(c=>c.estado==='pendiente');
+  const lista=CLIENT_FILTER==='pendientes'?pend:CLI;
   const d=CLIENT_DRAFT||(CLIENT_DRAFT={n:'',tel:'',email:'',dir:'',usuario:false});
-  return `${pend.length?`<div class="hero"><div class="hero-k">Pendientes de habilitación</div>
+  return `${pend.length?`<button class="hero hero-btn" data-client-filter="pendientes" data-client-jump="1"><div class="hero-k">Pendientes de habilitación</div>
     <h4>${pend.length} cliente${pend.length>1?'s':''} esperando revisión</h4>
-    <p>Revisá los datos y habilitá solo cuando correspondan a un cliente válido.</p></div>`:''}
+    <p>Revisá los datos y habilitá solo cuando correspondan a un cliente válido.</p></button>`:''}
   <div class="panel"><div class="panel-t">Registrar cliente por administrador</div>
     <div class="field"><label for="cl-n">Nombre comercial o persona</label>
       <input id="cl-n" value="${esc(d.n)}" placeholder="Ej. Librería Sur"></div>
@@ -1389,8 +1464,10 @@ function vClientes(){
     <button class="btn pri full" id="crear-cliente-admin" style="margin-top:14px">Registrar cliente habilitado</button>
     <span class="hint" style="display:block;margin-top:10px">Si no se crea usuario, el cliente existe para operar internamente pero no ingresa al portal.</span>
   </div>
-  <div class="sec"><div class="sec-h"><h3>Clientes</h3><span class="more">${CLI.length}</span></div>
-    ${CLI.map(c=>{const st=clienteEstadoUI(c);return `<div class="cd ${st.off?'off':''}"><div class="cd-h">
+  <div class="chips" style="margin-top:-4px"><button data-client-filter="todos" aria-pressed="${CLIENT_FILTER==='todos'}">Todos (${CLI.length})</button>
+    <button data-client-filter="pendientes" aria-pressed="${CLIENT_FILTER==='pendientes'}">Esperando habilitación (${pend.length})</button></div>
+  <div class="sec" id="clientes-lista"><div class="sec-h"><h3>${CLIENT_FILTER==='pendientes'?'Clientes esperando habilitación':'Clientes'}</h3><span class="more">${lista.length}</span></div>
+    ${lista.length?lista.map(c=>{const st=clienteEstadoUI(c);return `<div class="cd ${st.off?'off':''}"><div class="cd-h">
       <div class="cd-av">${c.n.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
       <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
         <div class="cd-v">${esc(c.tel)} · ${esc(c.email||'sin email')} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''}</div></div>
@@ -1408,7 +1485,7 @@ function vClientes(){
         ${c.estado==='pendiente'?`<button class="btn sm pri" data-habilitar="${c.id}">${st.act}</button>`:
           `<button class="btn sm ${c.estado==='habilitado'?'danger':'pri'}" data-cliente-toggle="${c.id}">${st.act}</button>`}
         <button class="btn sm soft" data-cliente-edit="${c.id}">Guardar cambios</button>
-      </div></div>`}).join('')}</div>`;
+      </div></div>`}).join(''):'<div class="empty"><div class="ic">✓</div><p>No hay clientes pendientes</p><small>Cuando llegue un registro nuevo va a aparecer acá.</small></div>'}</div>`;
 }
 
 function vControl(){
@@ -2032,6 +2109,9 @@ document.addEventListener('click',ev=>{
     else TAB=go.dataset.go;
     topPage();render();return}
   const ctl=c('[data-control]');if(ctl){CONTROL=ctl.dataset.control;render();return}
+  const cf=c('[data-client-filter]');if(cf){CLIENT_FILTER=cf.dataset.clientFilter;render();
+    if(cf.dataset.clientJump)setTimeout(()=>document.querySelector('#clientes-lista')?.scrollIntoView({behavior:'smooth',block:'start'}),40);
+    return}
   const acc=c('[data-access]');if(acc){ACCESS_MODE=acc.dataset.access;render();return}
   if(c('#login-ok')){toast('Ingreso simulado');return}
   if(c('#recuperar-ok')){audit('Solicitud de recuperación','Se enviaron instrucciones sin exponer si la cuenta existe','Sistema');
@@ -2258,6 +2338,15 @@ document.addEventListener('click',ev=>{
   if(c('#pay-file')){toast('Archivo seleccionado');return}
   if(c('#pay-confirm')){PAY=null;toast('Comprobante guardado');return}
   if(c('#f-frag')){DRAFT.fragil=!DRAFT.fragil;render();return}
+  const combo=c('[data-combo]');if(combo&&DRAFT){const k=combo.dataset.combo;
+    if(k==='cliente'){DRAFT.clienteOpen=!DRAFT.clienteOpen;DRAFT.retiroOpen=false}
+    if(k==='retiro'){DRAFT.retiroOpen=!DRAFT.retiroOpen;DRAFT.clienteOpen=false}
+    render();setTimeout(()=>document.querySelector(k==='cliente'?'#cli-search':'#ret-search')?.focus(),40);return}
+  const cliPick=c('[data-cli-pick]');if(cliPick&&DRAFT){DRAFT.cliente=cliPick.dataset.cliPick;
+    DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};
+    DRAFT.clienteOpen=false;DRAFT.retiroOpen=false;DRAFT.clienteQ='';DRAFT.retiroQ='';render();return}
+  const retPick=c('[data-ret-pick]');if(retPick&&DRAFT){DRAFT.retiro=retPick.dataset.retPick;
+    DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;DRAFT.retiroOpen=false;DRAFT.retiroQ='';render();return}
   if(c('#pk-mas')){const t=DRAFT.paquetes[0].tam;
     if(DRAFT.paquetes.length<20)DRAFT.paquetes.push({tam:t});render();return}
   if(c('#pk-menos')){if(DRAFT.paquetes.length>1)DRAFT.paquetes.pop();render();return}
@@ -2265,7 +2354,13 @@ document.addEventListener('click',ev=>{
   if(c('#atras')){DRAFT.paso--;DRAFT.err={};topPage();render();return}
   if(c('#sig')){const d=DRAFT;d.err={};
     if(d.paso===1){d.retiro=d.retiro.trim();d.retiroNuevo=d.retiroNuevo.trim();
-      if(!d.cliente)d.err.cliente='Elegí quién envía.';if(!retiroDraft(d))d.err.retiro='Falta completar la dirección de retiro.'}
+      if(!d.cliente)d.err.cliente='Elegí quién envía.';
+      if(d.cliente==='__nuevo__'){
+        d.clienteNuevo.n=d.clienteNuevo.n.trim();d.clienteNuevo.dir=d.clienteNuevo.dir.trim();
+        d.retiroNuevo=d.clienteNuevo.dir;d.retiro='';
+        if(!d.clienteNuevo.n)d.err.cliente='Completá el nombre del cliente nuevo.';
+        if(!d.clienteNuevo.dir)d.err.retiro='Falta la dirección habitual de retiro.';
+      }else if(!retiroDraft(d))d.err.retiro='Falta completar la dirección de retiro.'}
     if(d.paso===2){d.entrega=entregaDraft(d);if(!d.dest.trim())d.err.dest='Falta quién recibe.';
       if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';
       if(!d.ventana)d.err.ventana='Elegí un horario.';
@@ -2273,6 +2368,14 @@ document.addEventListener('click',ev=>{
     if(Object.keys(d.err).length){render();return}
     d.paso++;topPage();render();return}
   if(c('#crear')){const d=DRAFT;
+    if(d.cliente==='__nuevo__'){
+      const nc=d.clienteNuevo,id='cl'+(CLI.length+1),
+        usuario=nc.usuario?(nc.email?.split('@')[0]||nc.n.toLowerCase().replace(/\s+/g,'.')).slice(0,18):null;
+      CLI.push({id,n:nc.n,tel:nc.tel.trim()||'Sin teléfono',email:nc.email.trim()||'',estado:'habilitado',usuario,dirs:[nc.dir]});
+      if(usuario)USERS.push({id:'u'+(USERS.length+1),nombre:nc.n,usuario,rol:'Cliente',estado:'Habilitado'});
+      audit('Cliente registrado desde alta de envío',`${nc.n} · ${usuario?'con usuario':'sin usuario de portal'}`,'Admin');
+      d.cliente=nc.n;d.retiroNuevo=nc.dir;d.retiro='';
+    }
     const cl=CLI.find(x=>x.n===d.cliente),retiro=retiroDraft(d);
     if(cl&&d.favRetiro&&retiro&&!cl.dirs.some(x=>x.toLowerCase()===retiro.toLowerCase()))cl.dirs.push(retiro);
     const e=mk({cliente:d.cliente,retiro:retiro,destinatario:d.dest,tel:d.tel,entrega:entregaDraft(d),
@@ -2287,9 +2390,10 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='cust-to'&&CUST){CUST.to=t.value;return}
   if(t.id==='inc-tipo'&&INC){INC.tipo=t.value;return}
   if(t.id==='evid-tipo'&&EVID){EVID.tipo=t.value;return}
-  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;render();return}
+  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};render();return}
   if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
   if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
+  if(t.id==='f-cl-new-user'&&DRAFT?.clienteNuevo){DRAFT.clienteNuevo.usuario=t.checked;return}
   if(t.id==='f-zona'){DRAFT.zona=t.value;DRAFT.fecha=jornadasZona(DRAFT.zona)[0];
     if(DRAFT.ventana&&!franjaVigente(DRAFT.ventana,DRAFT.fecha))DRAFT.ventana='';
     DRAFT.err.entrega=null;render();return}
@@ -2302,6 +2406,10 @@ document.addEventListener('change',e=>{const t=e.target;
 document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){vEnvios.q=t.value;const p=t.selectionStart;render();
     const n=document.querySelector('#q');if(n){n.focus();n.setSelectionRange(p,p)}return}
+  if(t.id==='cli-search'&&DRAFT){DRAFT.clienteQ=t.value;const p=t.selectionStart;render();
+    const n=document.querySelector('#cli-search');if(n){n.focus();n.setSelectionRange(p,p)}return}
+  if(t.id==='ret-search'&&DRAFT){DRAFT.retiroQ=t.value;const p=t.selectionStart;render();
+    const n=document.querySelector('#ret-search');if(n){n.focus();n.setSelectionRange(p,p)}return}
   if(t.id==='public-q'){PUBLIC_Q=t.value;const p=t.selectionStart;render();
     const n=document.querySelector('#public-q');if(n){n.focus();n.setSelectionRange(p,p)}return}
   if(t.id==='cl-n'&&CLIENT_DRAFT)CLIENT_DRAFT.n=t.value;
@@ -2316,6 +2424,10 @@ document.addEventListener('input',e=>{const t=e.target;
     if(c)c.base=t.value;
     return}
   if(t.id==='f-dest')DRAFT.dest=t.value;
+  if(t.id==='f-cl-new-n'&&DRAFT?.clienteNuevo){DRAFT.clienteNuevo.n=t.value;DRAFT.err.cliente=null}
+  if(t.id==='f-cl-new-tel'&&DRAFT?.clienteNuevo)DRAFT.clienteNuevo.tel=t.value;
+  if(t.id==='f-cl-new-email'&&DRAFT?.clienteNuevo)DRAFT.clienteNuevo.email=t.value;
+  if(t.id==='f-cl-new-dir'&&DRAFT?.clienteNuevo){DRAFT.clienteNuevo.dir=t.value;DRAFT.retiroNuevo=t.value;DRAFT.err.retiro=null}
   if(t.id==='f-ret-new'){DRAFT.retiroNuevo=t.value;DRAFT.err.retiro=null}
   if(t.id==='f-tel')DRAFT.tel=t.value;
   if(t.id==='f-ent'){DRAFT.entrega=t.value;DRAFT.err.entrega=null}

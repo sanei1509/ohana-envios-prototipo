@@ -68,6 +68,8 @@ El selector de arriba cambia entre cuatro perfiles:
 
 **Planificación por jornada.** Los envíos traen fecha de retiro desde el alta. Se puede planificar hoy, mañana o cualquier día hábil de las próximas dos semanas. Los envíos que quedaron sin resolver de días anteriores aparecen marcados, con dos salidas: reprogramar o devolver al remitente.
 
+**Alta con cliente nuevo.** Si el admin carga un envío y el cliente no existe, puede registrarlo desde el mismo flujo. El cliente queda habilitado para operar internamente y la cuenta de portal es opcional.
+
 ## Alcance del prototipo
 
 - Persistencia: al recargar vuelve al estado inicial.
