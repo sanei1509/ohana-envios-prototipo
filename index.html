@@ -1472,7 +1472,7 @@ function vClientes(){
       <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
         <div class="cd-v">${esc(c.tel)} · ${esc(c.email||'sin email')} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''}</div></div>
       <span class="pill ${st.cls}"><i class="dot"></i>${st.txt}</span></div>
-      <div class="panel" style="margin-top:12px;box-shadow:none;background:var(--soft)">
+      ${c.estado!=='pendiente'?`<div class="panel" style="margin-top:12px;box-shadow:none;background:var(--soft)">
         <div class="panel-t">Direcciones habituales</div>
         ${c.dirs.map((dir,i)=>`<div class="fila"><span class="fila-n">${i+1}</span>
           <div class="fila-m"><div class="fila-t">${esc(dir)}</div><div class="fila-s">Disponible para nuevos envíos</div></div>
@@ -1480,11 +1480,15 @@ function vClientes(){
         <div class="field" style="margin-top:12px;margin-bottom:10px"><label for="dir-${c.id}">Agregar dirección</label>
           <input id="dir-${c.id}" data-newdir="${c.id}" placeholder="Nueva dirección habitual"></div>
         <button class="btn sm soft full" data-adddir="${c.id}">Agregar dirección</button>
-      </div>
+      </div>`:`<div class="panel" style="margin-top:12px;box-shadow:none;background:var(--soft)">
+        <div class="panel-t">Datos declarados</div>
+        ${c.dirs.map((dir,i)=>`<div class="fila"><span class="fila-n">${i+1}</span>
+          <div class="fila-m"><div class="fila-t">${esc(dir)}</div><div class="fila-s">Dirección informada en el registro</div></div></div>`).join('')}
+      </div>`}
       <div class="btnrow" style="margin-top:12px">
         ${c.estado==='pendiente'?`<button class="btn sm pri" data-habilitar="${c.id}">${st.act}</button>`:
           `<button class="btn sm ${c.estado==='habilitado'?'danger':'pri'}" data-cliente-toggle="${c.id}">${st.act}</button>`}
-        <button class="btn sm soft" data-cliente-edit="${c.id}">Guardar cambios</button>
+        ${c.estado!=='pendiente'?`<button class="btn sm soft" data-cliente-edit="${c.id}">Guardar cambios</button>`:''}
       </div></div>`}).join(''):'<div class="empty"><div class="ic">✓</div><p>No hay clientes pendientes</p><small>Cuando llegue un registro nuevo va a aparecer acá.</small></div>'}</div>`;
 }
 
