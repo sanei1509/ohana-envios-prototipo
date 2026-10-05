@@ -297,6 +297,7 @@ body.dock-over .dock{bottom:var(--navh);padding-bottom:10px;
 .selectopt.on .mark{background:var(--brand);border-color:var(--brand)}
 /* El texto de ayuda va entre la etiqueta y el combo, no adentro del botón. */
 .field > .hint{margin:-2px 0 8px}
+.hint-i{display:flex;gap:6px;align-items:flex-start}
 .combo{position:relative}
 .combo-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .combo-btn{width:100%;min-height:var(--tap);border-radius:15px;background:var(--soft);padding:12px 48px 12px 16px;
@@ -862,6 +863,9 @@ const NAV_ICO={
   entrar:'<path d="M14 4.5h4.4a1.6 1.6 0 0 1 1.6 1.6v11.8a1.6 1.6 0 0 1-1.6 1.6H14"/><path d="M9.6 15.8 13.4 12 9.6 8.2"/><path d="M13.4 12H3.8"/>',
   codigo:'<path d="M5.5 4.4v15.2"/><path d="M8.6 4.4v15.2"/><path d="M11.4 4.4v15.2"/><path d="M15 4.4v15.2"/><path d="M18.5 4.4v15.2"/>'
 };
+NAV_ICO.info='<circle cx="12" cy="12" r="9"/><path d="M12 11.2v5"/><path d="M12 7.9h.01"/>';
+/* Ícono suelto para textos de ayuda; mismo trazo que la nav. */
+const infoIc=(sz=14)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="width:'+sz+'px;height:'+sz+'px;flex:none;margin-top:1px">'+NAV_ICO.info+'</svg>';
 const navIc=n=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="width:19px;height:19px;display:block">'+(NAV_ICO[n]||'')+'</svg>';
 
 const NAV={
@@ -1227,7 +1231,9 @@ function vAlta(){
     const clientesFiltrados=hab.filter(c=>(c.n+' '+c.tel+' '+(c.email||'')).toLowerCase().includes(q));
     const retirosFiltrados=cl?cl.dirs.filter(x=>x.toLowerCase().includes(rq)):[];
     b=`<div class="field"><label>¿Quién envía?</label>
-      <span class="hint">${nuevo?'Carga rápida desde este envío':cl?`${cl.dirs.length} dirección${cl.dirs.length>1?'es':''} de retiro guardada${cl.dirs.length>1?'s':''}`:'Buscá por nombre, teléfono o email'}</span>
+      <span class="hint hint-i">${infoIc()}<span>${nuevo?'Completá los datos del cliente nuevo más abajo.'
+        :cl?`Tiene ${cl.dirs.length} dirección${cl.dirs.length>1?'es':''} de retiro guardada${cl.dirs.length>1?'s':''}. Podés cambiar de cliente cuando quieras.`
+        :'Buscá por nombre, teléfono o email. Si el cliente no existe, lo podés registrar acá mismo.'}</span></span>
       <div class="combo ${d.clienteOpen?'open':''}">
         <button class="combo-btn" data-combo="cliente" type="button">
           <span class="combo-val">${nuevo?'Registrar cliente nuevo':d.cliente?esc(d.cliente):'Seleccioná un cliente'}</span>
@@ -1260,7 +1266,7 @@ function vAlta(){
         <span class="hint" style="display:block;margin-top:10px">El cliente queda habilitado para este envío. El usuario de portal es opcional.</span>
       </div>`:
       `<div class="field"><label>Dirección de retiro</label>
-      <span class="hint">${cl?'También podés escribir una dirección nueva más abajo':'Seleccioná primero un cliente para ver sus direcciones'}</span>
+      <span class="hint hint-i">${infoIc()}<span>${cl?'Elegí una dirección guardada o escribí una nueva más abajo.':'Seleccioná primero un cliente para ver sus direcciones.'}</span></span>
       <div class="combo ${d.retiroOpen?'open':''}">
         <button class="combo-btn" data-combo="retiro" type="button" ${cl?'':'disabled'}>
           <span class="combo-val">${d.retiro?esc(d.retiro):(cl?'Seleccioná una dirección':'Sin cliente seleccionado')}</span>
