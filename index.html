@@ -713,7 +713,9 @@ const tieneCC=n=>!!clienteCfg(n).ctaCte;
 const tarifaCliente=n=>clienteCfg(n).tarifaEspecial||null;
 const precioEnvio=(cliente,express=false,especial=false)=>especial?null:(tarifaCliente(cliente)|| (express?TARIFA_EXPRESS:TARIFA_NORMAL));
 const pagoLabel=m=>({cc:'Cuenta corriente',comprobante:'Transferencia / comprobante',retiro:'Efectivo al retirar',entrega:'Efectivo al entregar'}[m]||'Sin definir');
-const pagoDraft=d=>d.pagoModo||(tieneCC(d.cliente)?'cc':'');
+/* Si quedó 'cc' de un cliente anterior y el actual no tiene cuenta corriente,
+   se descarta: el modo elegido tiene que ser válido para el cliente del envío. */
+const pagoDraft=d=>(d.pagoModo==='cc'&&!tieneCC(d.cliente))?'':(d.pagoModo||(tieneCC(d.cliente)?'cc':''));
 const expressPendientes=()=>ENVIOS.filter(e=>e.express&&e.expressEstado==='Pendiente de aprobacion'&&!['entregado','cancelado'].includes(e.estado));
 const rutaArmadaFecha=f=>Object.values(ROUTE_PLAN).flat().some(id=>{
   const e=ENVIOS.find(x=>x.id===id);
@@ -2413,7 +2415,6 @@ document.addEventListener('click',ev=>{
     MAS.excl=MAS.excl.includes(f)?MAS.excl.filter(x=>x!==f):[...MAS.excl,f];render();return}
   if(c('#m-restaurar')&&MAS){MAS.excl=[];render();return}
   if(c('#m-volver')&&MAS){MAS.paso=1;topPage();render();return}
-  if(c('#m-otra2')){MAS=null;topPage();render();return}
   if(c('#m-otra')){MAS=null;topPage();render();return}
   if(c('#m-confirmar')&&MAS){const m=MAS;
     const ok=m.filas.filter(r=>!r.err&&!r.dup&&!m.excl.includes(r.f));
@@ -2549,7 +2550,8 @@ document.addEventListener('change',e=>{const t=e.target;
     EXPRESS.err=null;render();return}
   if(t.id==='ex-ent'&&EXPRESS){EXPRESS.fechaEntrega=t.value;EXPRESS.err=null;render();return}
   if(t.id==='ex-ven'&&EXPRESS){EXPRESS.ventana=t.value;EXPRESS.err=null;return}
-  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};render();return}
+  if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};
+    DRAFT.pagoModo=tieneCC(DRAFT.cliente)?'cc':'';render();return}
   if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
   if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
   if(t.id==='f-cl-new-user'&&DRAFT?.clienteNuevo){DRAFT.clienteNuevo.usuario=t.checked;return}
