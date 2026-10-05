@@ -122,7 +122,8 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 .nav button{min-height:46px;border-radius:26px;display:flex;align-items:center;gap:6px;
   padding:0 11px;color:var(--nav-ink);font-size:13px;font-weight:700;position:relative;flex:none}
 .nav button .icw{position:relative;display:grid;place-items:center;flex:none}
-.nav button .ic{font-size:17px;line-height:1}
+.nav button .ic{font-size:17px;line-height:1;display:grid;place-items:center}
+.nav button .ic svg{display:block}
 .nav button .lb{display:inline;white-space:nowrap}
 .nav button[aria-pressed="true"]{background:var(--nav-pill);color:var(--brand)}
 .nav .badge{position:absolute;top:-5px;right:-8px;background:var(--bad);color:var(--on-solid);font-size:10px;
@@ -134,6 +135,7 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
   .nav-in{gap:1px;padding:6px}
   .nav button{padding:0 8px;font-size:12px;gap:4px}
   .nav button .ic{font-size:15px}
+  .nav button .ic svg{width:17px;height:17px}
 }
 
 /* ===== section ===== */
@@ -842,13 +844,31 @@ const PLANILLA=()=>[
 ];
 let PLANI={c1:[],c2:[],c3:[]};
 
+/* Íconos de la barra de navegación: SVG de línea 24x24, stroke currentColor.
+   navIc(nombre) devuelve el markup; hereda el color activo/inactivo de la nav. */
+const NAV_ICO={
+  inicio:'<path d="M3.5 10.4 12 3.6l8.5 6.8"/><path d="M5.6 9v10.4h12.8V9"/><path d="M9.7 19.4v-5.7h4.6v5.7"/>',
+  paquete:'<path d="M3 7.4 12 3l9 4.4"/><path d="M3 7.4v9.2L12 21l9-4.4V7.4"/><path d="M3 7.4 12 12l9-4.6"/><path d="M12 12v9"/>',
+  mas:'<path d="M12 4.8v14.4"/><path d="M4.8 12h14.4"/>',
+  subir:'<path d="M12 19.2V5.4"/><path d="M6.4 11 12 5.4 17.6 11"/><path d="M4.6 20.4h14.8"/>',
+  tienda:'<path d="M3 9.5 4.6 4h14.8L21 9.5"/><path d="M3 9.5h18"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5.5h5V20"/>',
+  equipo:'<circle cx="9" cy="8" r="3.1"/><path d="M3.2 19.5a5.8 5.8 0 0 1 11.6 0"/><path d="M16.5 5.4a3.1 3.1 0 0 1 0 5.5"/><path d="M18 14.6a5.8 5.8 0 0 1 2.8 4.9"/>',
+  control:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h16"/><circle cx="9" cy="6.5" r="1.9"/><circle cx="15" cy="17.5" r="1.9"/>',
+  check:'<path d="M4.5 12.6 9.3 17.4 19.5 7.2"/>',
+  pin:'<path d="M12 21s6.5-5.6 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.4 12 21 12 21Z"/><circle cx="12" cy="10.6" r="2.4"/>',
+  entrar:'<path d="M14 4.5h4.4a1.6 1.6 0 0 1 1.6 1.6v11.8a1.6 1.6 0 0 1-1.6 1.6H14"/><path d="M9.6 15.8 13.4 12 9.6 8.2"/><path d="M13.4 12H3.8"/>',
+  codigo:'<path d="M5.5 4.4v15.2"/><path d="M8.6 4.4v15.2"/><path d="M11.4 4.4v15.2"/><path d="M15 4.4v15.2"/><path d="M18.5 4.4v15.2"/>'
+};
+const navIc=n=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="width:19px;height:19px;display:block">'+(NAV_ICO[n]||'')+'</svg>';
+
 const NAV={
-  admin:[{k:'inicio',l:'Inicio',i:'⌂'},{k:'envios',l:'Envíos',i:'📦'},
-    {k:'alta',l:'Nuevo',i:'+'},{k:'masiva',l:'Cargar',i:'⇧'},{k:'clientes',l:'Clientes',i:'🏪'},
-    {k:'cadetes',l:'Equipo',i:'👥'},{k:'control',l:'Control',i:'▤'}],
-  cadete:[{k:'tareas',l:'Tareas',i:'✓'},{k:'hoy',l:'Mi día',i:'📍'}],
-  cliente:[{k:'mis',l:'Envíos',i:'📦'},{k:'nuevo',l:'Pedir',i:'+'}],
-  futuro:[{k:'acceso',l:'Acceso',i:'↪'},{k:'publico',l:'Código',i:'#'}]
+  admin:[{k:'inicio',l:'Inicio',i:navIc('inicio')},{k:'envios',l:'Envíos',i:navIc('paquete')},
+    {k:'alta',l:'Nuevo',i:navIc('mas')},{k:'masiva',l:'Cargar',i:navIc('subir')},
+    {k:'clientes',l:'Clientes',i:navIc('tienda')},
+    {k:'cadetes',l:'Equipo',i:navIc('equipo')},{k:'control',l:'Control',i:navIc('control')}],
+  cadete:[{k:'tareas',l:'Tareas',i:navIc('check')},{k:'hoy',l:'Mi día',i:navIc('pin')}],
+  cliente:[{k:'mis',l:'Envíos',i:navIc('paquete')},{k:'nuevo',l:'Pedir',i:navIc('mas')}],
+  futuro:[{k:'acceso',l:'Acceso',i:navIc('entrar')},{k:'publico',l:'Código',i:navIc('codigo')}]
 };
 const HEAD={
   inicio:{t:'Organizá el día,<em>sin vueltas.</em>',s:'Distribuí los envíos pendientes entre tu equipo.'},
