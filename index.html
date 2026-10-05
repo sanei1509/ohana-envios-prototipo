@@ -602,9 +602,9 @@ button.otrodia:active{transform:scale(.99)}
 .sh-h{padding:14px 20px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex:none}
 .sh-h h3{font-size:20px;font-weight:800;margin:3px 0 0;letter-spacing:-.025em}
 .sh-b{padding:0 20px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
-.sh-f{padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;flex:none;
+.sh-f{padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;flex-wrap:wrap;flex:none;
   background:var(--bg);border-top:1px solid var(--line)}
-.sh-f .btn{flex:1}
+.sh-f .btn{flex:1;min-width:130px}
 .panel{background:var(--card);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh);margin-bottom:14px}
 .panel:last-child{margin-bottom:0}
 .panel-t{font-size:12px;font-weight:800;color:var(--ink-3);text-transform:uppercase;
@@ -685,13 +685,28 @@ function jornadas(n=10){ // n días hábiles desde hoy
   return out;
 }
 const JORNADAS=jornadas(10);
-const ZONAS={mvd:{l:'Montevideo',precio:200,estado:'Activa'},costa:{l:'Costa de Oro',precio:300,estado:'Activa'}};
+const TARIFA_NORMAL=200,TARIFA_EXPRESS=250;
+const RETIRO_STD='08:30–10:00';
+const FRANJAS_ENTREGA=['09:00–13:30','13:30–17:30'];
+const ZONAS={mvd:{l:'Montevideo',precio:TARIFA_NORMAL,estado:'Activa'},costa:{l:'Costa de Oro',precio:TARIFA_NORMAL,estado:'Activa'}};
 const diasCosta=f=>{const[y,m,d]=f.split('-').map(Number);return [1,3,5].includes(new Date(y,m-1,d).getDay())};
 const jornadasZona=z=>z==='costa'?JORNADAS.filter(diasCosta):JORNADAS;
 const precioZona=z=>(ZONAS[z]||ZONAS.mvd).precio;
 const nombreZona=z=>(ZONAS[z]||ZONAS.mvd).l;
-const FRANJAS=['09:00–12:00','10:00–13:00','14:00–18:00','15:00–19:00'];
-function finFranja(v){const h=(v.split('–')[1]||'').split(':').map(Number);return h[0]*60+h[1]}
+const clienteCfg=n=>CLI.find(c=>c.n===n)||{};
+const retiroCliente=n=>{const c=clienteCfg(n);return (c.retiroDesde&&c.retiroHasta)?c.retiroDesde+'–'+c.retiroHasta:RETIRO_STD};
+const tieneCC=n=>!!clienteCfg(n).ctaCte;
+const tarifaCliente=n=>clienteCfg(n).tarifaEspecial||null;
+const precioEnvio=(cliente,express=false,especial=false)=>especial?null:(tarifaCliente(cliente)|| (express?TARIFA_EXPRESS:TARIFA_NORMAL));
+const pagoLabel=m=>({cc:'Cuenta corriente',comprobante:'Transferencia / comprobante',retiro:'Efectivo al retirar',entrega:'Efectivo al entregar'}[m]||'Sin definir');
+const pagoDraft=d=>d.pagoModo||(tieneCC(d.cliente)?'cc':'');
+const expressPendientes=()=>ENVIOS.filter(e=>e.express&&e.expressEstado==='Pendiente de aprobacion'&&!['entregado','cancelado'].includes(e.estado));
+const rutaArmadaFecha=f=>Object.values(ROUTE_PLAN).flat().some(id=>{
+  const e=ENVIOS.find(x=>x.id===id);
+  return e&&!['cancelado','entregado'].includes(e.estado)&&(e.fechaRetiro||e.fecha)===f;
+});
+const FRANJAS=FRANJAS_ENTREGA;
+function finFranja(v){const h=(v.split('\u2013')[1]||'').split(':').map(Number);return h[0]*60+h[1]}
 function minutosAhora(){const d=new Date();return d.getHours()*60+d.getMinutes()}
 function franjaVigente(v,fecha){return fecha!==HOY||finFranja(v)>minutosAhora()}
 function franjasDisponibles(fecha){return FRANJAS.filter(v=>franjaVigente(v,fecha))}
@@ -719,10 +734,10 @@ const pill=e=>`<span class="pill ${ES[e].c}"><i class="dot"></i>${ES[e].l}</span
 const CAD=[{id:'c1',n:'Martín Rodríguez',v:'Moto',ic:'🛵',disp:true,base:'Bulevar Artigas 1825, Tres Cruces'},
   {id:'c2',n:'Pedro Suárez',v:'Auto',ic:'🚗',disp:true,base:'Av. Italia 6201, Carrasco'},
   {id:'c3',n:'Juan Pereyra',v:'Camioneta',ic:'🚚',disp:false,base:'Camino Carrasco 4680, Malvín Norte'}];
-const CLI=[{id:'cl1',n:'Boutique Amalia',tel:'099 123 456',email:'amalia@boutique.uy',estado:'habilitado',usuario:'ba.portal',dirs:['Av. Rivera 2456, Pocitos','Br. España 2100, Pocitos']},
-  {id:'cl2',n:'Tienda Nube MVD',tel:'098 777 321',email:'ventas@tiendanube.uy',estado:'habilitado',usuario:null,dirs:['Av. Brasil 1900, Pocitos']},
-  {id:'cl3',n:'Farmacia del Centro',tel:'097 555 010',email:'centro@farmacia.uy',estado:'habilitado',usuario:null,dirs:['18 de Julio 1420, Centro']},
-  {id:'cl4',n:'La Casa del Té',tel:'096 222 410',email:'hola@lacasadelte.uy',estado:'pendiente',usuario:'lacasadelte',dirs:['Luis Alberto de Herrera 1180, Buceo']}];
+const CLI=[{id:'cl1',n:'Boutique Amalia',tel:'099 123 456',email:'amalia@boutique.uy',estado:'habilitado',usuario:'ba.portal',dirs:['Av. Rivera 2456, Pocitos','Br. Espana 2100, Pocitos'],retiroDesde:'08:30',retiroHasta:'10:00',ctaCte:true,periodo:'Semanal',tarifaEspecial:null},
+  {id:'cl2',n:'Tienda Nube MVD',tel:'098 777 321',email:'ventas@tiendanube.uy',estado:'habilitado',usuario:null,dirs:['Av. Brasil 1900, Pocitos'],retiroDesde:'12:00',retiroHasta:'13:30',ctaCte:false,periodo:'',tarifaEspecial:250},
+  {id:'cl3',n:'Farmacia del Centro',tel:'097 555 010',email:'centro@farmacia.uy',estado:'habilitado',usuario:null,dirs:['18 de Julio 1420, Centro'],retiroDesde:'08:30',retiroHasta:'10:00',ctaCte:true,periodo:'Quincenal',tarifaEspecial:null},
+  {id:'cl4',n:'La Casa del Te',tel:'096 222 410',email:'hola@lacasadelte.uy',estado:'pendiente',usuario:'lacasadelte',dirs:['Luis Alberto de Herrera 1180, Buceo'],retiroDesde:'12:00',retiroHasta:'13:30',ctaCte:false,periodo:'',tarifaEspecial:null}];
 const USERS=[
   {id:'u1',nombre:'Fernando Coito',usuario:'fernando',rol:'Administrador',estado:'Habilitado'},
   {id:'u2',nombre:'Martín Rodríguez',usuario:'martin.r',rol:'Repartidor / cadete',estado:'Habilitado'},
@@ -733,16 +748,17 @@ const USERS=[
 const evt=(t,d,w)=>({t,d,who:w,ts:nowISO()});
 function mk(o){const id=nextE();
   return{id,cliente:o.cliente,retiro:o.retiro,destinatario:o.destinatario,entrega:o.entrega,
-    tel:o.tel||'099 000 000',fecha:o.fecha||HOY,ventana:o.ventana,estado:o.estado||'pendiente',cadete:o.cadete||null,
-    zona:o.zona||'mvd',precio:o.precio||precioZona(o.zona||'mvd'),
-    custodia:o.custodia||'Cliente/remitente',urgente:!!o.urgente,fragil:!!o.fragil,notas:o.notas||'',
+    tel:o.tel||'099 000 000',fecha:o.fecha||HOY,fechaRetiro:o.fechaRetiro||o.fecha||HOY,fechaEntrega:o.fechaEntrega||o.fecha||HOY,ventana:o.ventana,estado:o.estado||'pendiente',cadete:o.cadete||null,
+    zona:o.zona||'mvd',precio:o.precio??precioEnvio(o.cliente,!!o.express,!!o.paqueteEspecial),precioManual:!!o.precioManual,
+    custodia:o.custodia||'Cliente/remitente',express:!!o.express,expressEstado:o.expressEstado||(o.express?'Pendiente de aprobacion':'No solicitado'),fragil:!!o.fragil,notas:o.notas||'',
+    pagoModo:o.pagoModo||(tieneCC(o.cliente)?'cc':'comprobante'),pagoEstado:o.pagoEstado||(tieneCC(o.cliente)?'En cuenta corriente':'Pendiente'),paqueteEspecial:!!o.paqueteEspecial,paqueteDesc:o.paqueteDesc||'',
     paquetes:o.paquetes.map((p,i)=>({id:nextP(),tam:p.tam,estado:p.estado||o.estado||'pendiente',n:i+1})),
     hist:o.hist||[evt('Envío registrado','Estado pendiente · custodia del remitente','Admin')]}}
 
 let ENVIOS=[
   mk({cliente:'Boutique Amalia',retiro:'Av. Rivera 2456, Pocitos',destinatario:'Laura Gómez',
     tel:'099 456 789',entrega:'Av. Italia 3400, Malvín',fecha:JORNADAS[0],ventana:'10:00–13:00',estado:'asignado',
-    cadete:'c1',urgente:true,notas:'Tocar timbre 3',
+    cadete:'c1',express:true,expressEstado:'Aprobado',notas:'Tocar timbre 3',
     paquetes:[{tam:'M'},{tam:'S'}],
     hist:[evt('Envío registrado','Estado pendiente · custodia del remitente','Admin'),
       evt('Asignado a Martín Rodríguez','Responsabilidad operativa · la custodia no cambia','Admin')]}),
@@ -757,7 +773,7 @@ let ENVIOS=[
     estado:'pendiente',fragil:true,paquetes:[{tam:'M'},{tam:'S'}]}),
   mk({cliente:'Tienda Nube MVD',retiro:'Av. Brasil 1900, Pocitos',destinatario:'Joaquín Ramos',
     tel:'092 771 043',entrega:'Av. Rivera 3901, Pocitos',fecha:JORNADAS[0],ventana:'15:00–19:00',
-    estado:'pendiente',urgente:true,paquetes:[{tam:'M'}]}),
+    estado:'pendiente',express:true,pagoModo:'comprobante',pagoEstado:'Pendiente',paquetes:[{tam:'M'}]}),
   mk({cliente:'Farmacia del Centro',retiro:'18 de Julio 1420, Centro',destinatario:'Ana Silva',
     tel:'097 333 444',entrega:'Rbla. Rep. del Perú 700, Pocitos',fecha:JORNADAS[0],ventana:'09:00–12:00',
     estado:'retirado',cadete:'c1',custodia:'Martín Rodríguez',fragil:true,
@@ -786,7 +802,7 @@ let ENVIOS=[
 
 let ROL='admin',TAB='inicio',SEL=null,OP=null,DRAFT=null,TOAST=null,PICK=null,LABEL=null,CREATED=null,PAY=null,ADDR=null,ROUTED=false,JORNADA=false,MOVE=null,JFILT='todos';
 let CUST=null,INC=null,EVID=null,CLIENT_DRAFT=null,CLIENT_FILTER='todos',ACCESS_MODE='login',PUBLIC_Q='',CONTROL='usuarios';
-let DIA=JORNADAS[0],ATRAS=null,CAL=false;
+let DIA=JORNADAS[0],ATRAS=null,CAL=false,EXPRESS=null;
 let ROUTE_PLAN={c1:[],c2:[],c3:[]};
 let ROUTE_STOPS={c1:[],c2:[],c3:[]};
 let MAS=null; // {paso, cliente, filas[], excluidas[]}
@@ -883,7 +899,7 @@ function sync(e){const{t,d}=bul(e);
   else if(e.paquetes.some(p=>p.estado==='retirado'))e.estado='retirado'}
 function progHTML(e){const b=bul(e);
   return `<span class="meta pkg-count">▦ ${b.t} bulto${b.t>1?'s':''}</span>`}
-const icFor=e=>e.estado==='entregado'?'✓':e.estado==='incidencia'?'!':e.urgente?'⚡':'▣';
+const icFor=e=>e.estado==='entregado'?'✓':e.estado==='incidencia'?'!':e.express?'⚡':'▣';
 const lastEvt=e=>e.hist?.[e.hist.length-1]||evt('Sin actividad','', 'Ohana');
 const actividadLabel=e=>{
   const h=lastEvt(e),t=h.t||'';
@@ -905,6 +921,7 @@ function vInicio(){
   const cuenta=f=>ENVIOS.filter(e=>e.fecha===f&&e.estado==='pendiente').length;
   const esHoy=DIA===HOY;
   const futuros=JORNADAS.slice(1).reduce((a,f)=>a+cuenta(f),0);
+  const expressReq=expressPendientes();
   const hayRutaRecibida=CAD.some(c=>(ROUTE_PLAN[c.id]||[]).some(id=>{
     const e=ENVIOS.find(x=>x.id===id);return e&&e.fecha===DIA&&!['cancelado'].includes(e.estado);
   }));
@@ -924,6 +941,8 @@ function vInicio(){
     <span class="al-m"><span class="al-t">${atrasados.length} envío${atrasados.length>1?'s':''} de días anteriores</span>
       <span class="al-s">Sin resolver. Reprogramá o devolvé al remitente.</span></span>
     <span class="chev">›</span></button>`:''}
+  ${expressReq.length?`<div class="sec"><div class="sec-h"><h3>Express a resolver</h3><span class="more">${expressReq.length}</span></div>
+    ${expressReq.map(e=>expressCard(e)).join('')}</div>`:''}
   ${pend.length&&hayRutaRecibida?`<div class="hero"><div class="hero-k">${labelDia(DIA)} · jornada armada</div>
     <h4>${pend.length} envío${pend.length>1?'s':''} nuevo${pend.length>1?'s':''} sin ruta</h4>
     <p>La jornada ya tiene rutas recibidas. Entrá para agregarlo manualmente a un cadete.</p>
@@ -963,6 +982,17 @@ function vInicio(){
   <div class="sec"><div class="sec-h"><h3>Actividad reciente</h3>
     <button class="more" data-go="envios">Ver todo</button></div>
     ${recientes.map(e=>ecCard(e,'actividad')).join('')}</div>`;
+}
+
+function expressCard(e){
+  return `<div class="cd"><div class="cd-h"><div class="cd-av">⚡</div>
+    <div class="cd-m"><div class="cd-n">${esc(e.id)} · ${esc(e.destinatario)}</div>
+      <div class="cd-v">Pedido express · retiro ${labelDia(e.fechaRetiro||e.fecha)} ${numDia(e.fechaRetiro||e.fecha)} · entrega ${labelDia(e.fechaEntrega||e.fecha)} ${numDia(e.fechaEntrega||e.fecha)}</div></div>
+    <span class="pill p-pend"><i class="dot"></i>Pendiente</span></div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn sm pri" data-express-review="${e.id}">Revisar express</button>
+      <button class="btn sm soft" data-open="${e.id}">Ver detalle</button>
+    </div></div>`;
 }
 
 function cdCard(c){
@@ -1112,7 +1142,7 @@ function refreshRouteList(routeEl,cid){
 function ecCard(e,mode){
   const b=bul(e),r=e.estado==='asignado';
   const icbg=e.estado==='entregado'?'var(--ok-soft)':e.estado==='incidencia'?'var(--bad-soft)':
-    e.urgente?'var(--bad-soft)':'var(--soft)';
+    e.express?'var(--bad-soft)':'var(--soft)';
   const cad=e.cadete&&['asignado','retirado','ruta','parcial'].includes(e.estado)
     ?`<span class="meta">◉ ${esc(cadN(e.cadete))}</span>`:'';
   const sinCad=!e.cadete&&e.estado==='pendiente'?'<span class="meta">Sin asignar</span>':'';
@@ -1125,7 +1155,7 @@ function ecCard(e,mode){
     <div class="ec-m"><div class="ec-n">${mode==='tarea'?(r?'Retirar de ':'Entregar a ')+esc(r?e.cliente:e.destinatario):esc(e.destinatario)}</div>
       <div class="ec-a">${subt}</div></div>
     <span class="ec-code">${e.id}</span></div>
-  <div class="ec-bot">${pill(e.estado)}${e.urgente?'<span class="urg">URGENTE</span>':''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}
+  <div class="ec-bot">${pill(e.estado)}${e.express?'<span class="urg">EXPRESS</span>':''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}
     ${progHTML(e)}${cad}${sinCad}<span class="meta" style="margin-left:auto">◔ ${actividad?fch(h.ts)+' '+hhmm(h.ts):e.ventana}</span></div>`;
   const card=`<button class="ec" data-open="${e.id}">${inner}</button>`;
   const puedeImprimir=mode==='cliente'&&['pendiente','asignado'].includes(e.estado);
@@ -1134,7 +1164,7 @@ function ecCard(e,mode){
       <button data-open="${e.id}" style="text-align:left">${inner}</button>
       <div class="ec-actions">
         ${puedeImprimir?`<button class="ec-act label" data-label="${e.id}">Imprimir etiqueta</button>`:''}
-        <button class="ec-act pay" data-pay="${e.id}">Cargar comprobante</button>
+        ${e.pagoModo==='comprobante'&&e.pagoEstado!=='Validado'?`<button class="ec-act pay" data-pay="${e.id}">Cargar comprobante</button>`:''}
       </div>
     </div>`;
   }
@@ -1161,7 +1191,7 @@ function vEnvios(){
 function vAlta(){
   const d=DRAFT||(DRAFT={paso:1,cliente:ROL==='cliente'?'Boutique Amalia':'',retiro:'',retiroNuevo:'',
     dest:'',tel:'',entregaCosta:{loc:'Solymar',otra:'',calle:'',manzana:'',solar:'',desc:''},
-    entrega:'',zona:'mvd',fecha:JORNADAS[0],ventana:'',notas:'',urgente:false,fragil:false,
+    entrega:'',zona:'mvd',fecha:JORNADAS[0],ventana:'',pagoModo:'',notas:'',express:false,fragil:false,paqueteEspecial:false,paqueteDesc:'',
     favRetiro:false,clienteNuevo:{n:'',tel:'',email:'',dir:'',usuario:false},paquetes:[{tam:'M'}],err:{}});
   const frDisp=franjasDisponibles(d.fecha);
   const ps=['Cliente','Destino','Bultos','Revisar'];
@@ -1202,7 +1232,7 @@ function vAlta(){
           Crear también una cuenta de acceso al portal</label>
         <span class="hint" style="display:block;margin-top:10px">El cliente queda habilitado para este envío. El usuario de portal es opcional.</span>
       </div>`:
-      `<div class="field"><label>¿De dónde lo retiramos?</label>
+      `<div class="field"><label>Direccion de retiro</label>
       <div class="combo ${d.retiroOpen?'open':''}">
         <button class="combo-btn" data-combo="retiro" type="button" ${cl?'':'disabled'}>
           <span>${d.retiro?esc(d.retiro):(cl?'Elegí una dirección favorita...':'Primero elegí el cliente')}<span class="sub">${cl?'También podés escribir una nueva dirección abajo':'Seleccioná un cliente para ver direcciones'}</span></span>
@@ -1236,10 +1266,10 @@ function vAlta(){
       <input id="f-tel" type="tel" inputmode="tel" value="${esc(d.tel)}" placeholder="09X XXX XXX"></div></div>
       <div class="field"><label for="f-zona">Zona de entrega</label>
       <select id="f-zona">
-        <option value="mvd" ${d.zona==='mvd'?'selected':''}>Montevideo · $200</option>
-        <option value="costa" ${d.zona==='costa'?'selected':''}>Costa de Oro · $300</option>
+        <option value="mvd" ${d.zona==='mvd'?'selected':''}>Montevideo - tarifa base $200</option>
+        <option value="costa" ${d.zona==='costa'?'selected':''}>Costa de Oro - sujeto a recorrido</option>
       </select>
-      <span class="hint">${d.zona==='costa'?'Completá localidad, manzana, solar y referencias para llegar.':'Tarifa base para paquetes medianos dentro de Montevideo.'}</span></div>
+      <span class="hint">${d.zona==='costa'?'Completa localidad, manzana, solar y referencias.':'Tarifa general normal chico/mediano: $200.'}</span></div>
       ${d.zona==='mvd'?`<div class="field"><label for="f-ent">¿Adónde lo llevamos?</label>
       <input id="f-ent" value="${esc(d.entrega)}" placeholder="Calle, número y barrio">
       ${d.err.entrega?`<div class="err">⚠ ${d.err.entrega}</div>`:''}</div>`:
@@ -1258,28 +1288,28 @@ function vAlta(){
       <div class="field"><label for="f-ent-desc">Descripción para llegar</label>
         <textarea id="f-ent-desc" placeholder="Referencias, esquina, color de casa, indicaciones...">${esc(d.entregaCosta.desc)}</textarea>
         ${d.err.entrega?`<div class="err">⚠ ${d.err.entrega}</div>`:''}</div>`}
-      <div class="field"><label>¿Qué día lo retiramos?</label>
+      <div class="field"><label>Fecha del envio</label>
         <div class="diapick">${fechas.slice(0,5).map(f=>`
           <button class="dp ${d.fecha===f?'on':''}" data-fecha="${f}">
             <span class="dp-d">${labelDia(f)}</span><span class="dp-n">${numDia(f)}</span></button>`).join('')}
           ${!fechas.slice(0,5).includes(d.fecha)?`<button class="dp on" data-fecha="${d.fecha}">
             <span class="dp-d">${labelDia(d.fecha)}</span><span class="dp-n">${numDia(d.fecha)}</span></button>`:''}
         </div>
-        <span class="hint" style="margin-top:8px;display:block">${d.zona==='costa'?'Costa de Oro: lunes, miércoles y viernes.':'Deslizá para ver más días. No trabajamos sábados ni domingos.'}</span>
+        <span class="hint" style="margin-top:8px;display:block">El cliente elige una sola fecha. Retiro y entrega nacen ese mismo dia.</span>
       </div>
-      <div class="field"><label for="f-ven">¿En qué horario?</label>
+      <div class="field"><label for="f-ven">Franja de entrega</label>
       <select id="f-ven"><option value="">Elegí una franja…</option>
       ${frDisp.map(v=>`<option ${d.ventana===v?'selected':''}>${v}</option>`).join('')}</select>
       ${!frDisp.length?`<div class="err">⚠ No quedan franjas disponibles para hoy. Elegí otro día.</div>`:''}
       ${d.err.ventana?`<div class="err">⚠ ${d.err.ventana}</div>`:''}</div>
-      <div class="field"><label for="f-urg">¿Es urgente?</label>
-      <select id="f-urg"><option value="">No, normal</option><option value="1" ${d.urgente?'selected':''}>Sí, urgente</option></select></div>
+      <div class="field"><label for="f-urg">Express</label>
+      <select id="f-urg"><option value="">No, normal ($200)</option><option value="1" ${d.express?'selected':''}>Solicitar express ($250, sujeto a aprobacion)</option></select></div>
+      <div class="field"><label for="f-pago">Forma de pago del envio</label><select id="f-pago"><option value="">Elegi una forma...</option>${tieneCC(d.cliente)?`<option value="cc" ${pagoDraft(d)==='cc'?'selected':''}>Cuenta corriente</option>`:''}<option value="comprobante" ${pagoDraft(d)==='comprobante'?'selected':''}>Transferencia / comprobante</option><option value="retiro" ${pagoDraft(d)==='retiro'?'selected':''}>Efectivo al retirar</option><option value="entrega" ${pagoDraft(d)==='entrega'?'selected':''}>Efectivo al entregar</option></select>${tieneCC(d.cliente)?`<span class="hint">Por defecto va a cuenta corriente, pero podés cambiarlo solo para este envío.</span>`:''}${d.err.pago?`<div class="err">! ${d.err.pago}</div>`:''}</div>
       <div class="field"><label for="f-not">Algo más que debamos saber</label>
       <textarea id="f-not" placeholder="Referencias, timbre, horarios…">${esc(d.notas)}</textarea></div>`;
   }else if(d.paso===3){
     const n=d.paquetes.length,tam=d.paquetes[0].tam;
-    const TAM=[['S','Chico','Sobre, caja pequeña'],['M','Mediano','Caja de zapatos'],
-      ['L','Grande','Caja de mudanza'],['XL','Muy grande','Necesita vehículo grande']];
+    const TAM=[['S','Chico','Sobre o caja chica'],['M','Mediano','Bolsa aprox. 30 x 30 cm'],['ESP','Especial','Fuera de medida habitual']];
     b=`<div class="qty">
         <button class="qty-b" id="pk-menos" ${n<=1?'disabled':''} aria-label="Quitar un bulto">−</button>
         <div class="qty-n"><span class="q">${n}</span><span class="ql">${n===1?'bulto':'bultos'}</span></div>
@@ -1294,7 +1324,7 @@ function vAlta(){
         <span class="hint" style="margin-top:10px;display:block">Sirve para saber qué vehículo hace falta. Si son distintos, elegí el más grande.</span>
       </div>
       <div class="sep" style="height:1px;background:var(--line);margin:20px 0"></div>
-      <button class="tog ${d.fragil?'on':''}" id="f-frag" role="switch" aria-checked="${!!d.fragil}">
+      ${tam==='ESP'?`<div class="field"><label for="f-pk-desc">Descripcion del paquete especial</label><textarea id="f-pk-desc" placeholder="Medidas, peso aproximado o por que excede lo habitual">${esc(d.paqueteDesc||'')}</textarea>${d.err.paquete?`<div class="err">! ${d.err.paquete}</div>`:''}</div>`:''}<button class="tog ${d.fragil?'on':''}" id="f-frag" role="switch" aria-checked="${!!d.fragil}">
         <span class="tog-i">◆</span>
         <span class="tog-m"><span class="tog-t">Contenido frágil</span>
           <span class="tog-s">El cadete lo transporta con cuidado y lo ve en su pantalla</span></span>
@@ -1303,15 +1333,16 @@ function vAlta(){
   }else{
     const nomCliente=d.cliente==='__nuevo__'?d.clienteNuevo.n:d.cliente;
     b=`<dl class="kv"><dt>Envía</dt><dd>${esc(nomCliente)}</dd>
-      <dt>Retiro</dt><dd>${esc(d.retiro)}</dd>
+      <dt>Retiro</dt><dd>${esc(retiroDraft(d))}<br><span class="hint">${retiroCliente(nomCliente)}</span></dd>
       <dt>Recibe</dt><dd>${esc(d.dest)}${d.tel?'<br><span class="hint">'+esc(d.tel)+'</span>':''}</dd>
       <dt>Entrega</dt><dd>${esc(d.entrega)}</dd>
       <dt>Zona</dt><dd>${nombreZona(d.zona)}</dd>
-      <dt>Horario</dt><dd>${esc(d.ventana)}${d.urgente?' <span class="urg">URGENTE</span>':''}</dd>
-      <dt>Bultos</dt><dd>${d.paquetes.length} ${d.paquetes.length===1?'bulto':'bultos'} · tamaño ${d.paquetes[0].tam}${d.fragil?' <span class="frag">◆ FRÁGIL</span>':''}</dd>
-      <dt>Precio</dt><dd><b>$${precioZona(d.zona)}</b></dd>
+      <dt>Entrega</dt><dd>${esc(d.ventana)}${d.express?' <span class="urg">EXPRESS</span>':''}</dd>
+      <dt>Bultos</dt><dd>${d.paquetes.length} ${d.paquetes.length===1?'bulto':'bultos'} - tamano ${d.paquetes[0].tam}${d.paquetes[0].tam==='ESP'?' <span class="frag">SUJETO A APROBACION</span>':''}${d.fragil?' <span class="frag">FRAGIL</span>':''}</dd>
+      <dt>Pago</dt><dd>${pagoLabel(pagoDraft(d))}</dd>
+      <dt>Precio</dt><dd><b>${d.paquetes[0].tam==='ESP'?'A confirmar':'$'+precioEnvio(nomCliente,d.express,false)}</b></dd>
       ${d.notas?`<dt>Notas</dt><dd>${esc(d.notas)}</dd>`:''}</dl>
-      <div class="note" style="margin-top:18px"><span class="ni">✓</span><div>Queda <b>pendiente</b>, sin cadete asignado y con la custodia del remitente. El precio del envío es <b>$${precioZona(d.zona)}</b> y se genera <b>una etiqueta del envío</b>.</div></div>`;
+      <div class="note" style="margin-top:18px"><span class="ni">✓</span><div>Queda <b>pendiente</b>, sin cadete asignado y con la custodia del remitente. El precio queda como <b>${d.paquetes[0].tam==='ESP'?'a confirmar':'$'+precioEnvio(nomCliente,d.express,false)}</b> y se genera <b>una etiqueta del envio</b>.</div></div>`;
   }
   return `<div class="steps">${ps.map((p,i)=>`<div class="step ${d.paso===i+1?'on':''} ${d.paso>i+1?'done':''}">
     <div class="bar"></div><div class="lb">${p}</div></div>`).join('')}</div>
@@ -1470,7 +1501,7 @@ function vClientes(){
     ${lista.length?lista.map(c=>{const st=clienteEstadoUI(c);return `<div class="cd ${st.off?'off':''}"><div class="cd-h">
       <div class="cd-av">${c.n.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
       <div class="cd-m"><div class="cd-n">${esc(c.n)}</div>
-        <div class="cd-v">${esc(c.tel)} · ${esc(c.email||'sin email')} · ${c.dirs.length} dirección${c.dirs.length>1?'es':''}</div></div>
+        <div class="cd-v">${esc(c.tel)} - ${esc(c.email||'sin email')} - retiro ${retiroCliente(c.n)} - ${c.ctaCte?'cuenta corriente '+esc(c.periodo||''):'sin cuenta corriente'}</div></div>
       <span class="pill ${st.cls}"><i class="dot"></i>${st.txt}</span></div>
       ${c.estado!=='pendiente'?`<div class="panel" style="margin-top:12px;box-shadow:none;background:var(--soft)">
         <div class="panel-t">Direcciones habituales</div>
@@ -1493,9 +1524,9 @@ function vClientes(){
 }
 
 function vControl(){
-  const tabs=[['usuarios','Usuarios'],['auditoria','Auditoría'],['reportes','Reportes'],['zonas','Zonas']];
+  const tabs=[['usuarios','Usuarios'],['auditoria','Auditoria'],['finanzas','Finanzas'],['reportes','Reportes'],['zonas','Tarifas']];
   return `<div class="chips">${tabs.map(([k,l])=>`<button data-control="${k}" aria-pressed="${CONTROL===k}">${l}</button>`).join('')}</div>
-    ${CONTROL==='usuarios'?vUsuarios():CONTROL==='auditoria'?vAuditoria():CONTROL==='reportes'?vReportes():vZonas()}`;
+    ${CONTROL==='usuarios'?vUsuarios():CONTROL==='auditoria'?vAuditoria():CONTROL==='finanzas'?vFinanzas():CONTROL==='reportes'?vReportes():vZonas()}`;
 }
 
 function vUsuarios(){
@@ -1523,6 +1554,13 @@ function vAuditoria(){
       <div class="tl-m">${esc(h.d)}</div><div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)} · ${esc(h.who)}</div></div>`).join('')}</div></div>`;
 }
 
+function vFinanzas(){
+  const clientes=CLI.filter(c=>c.ctaCte);
+  const saldo=c=>ENVIOS.filter(e=>e.cliente===c.n&&e.pagoModo==='cc').reduce((a,e)=>a+(e.precio||0),0);
+  return `<div class="stats"><div class="stat hi"><div class="n">${clientes.length}</div><div class="l">Con cuenta</div></div><div class="stat"><div class="n">$${clientes.reduce((a,c)=>a+saldo(c),0)}</div><div class="l">Saldo abierto</div></div></div>
+  <div class="sec"><div class="sec-h"><h3>Cuentas corrientes</h3></div>${clientes.map(c=>{const env=ENVIOS.filter(e=>e.cliente===c.n&&e.pagoModo==='cc');return `<div class="cd"><div class="cd-h"><div class="cd-av">$</div><div class="cd-m"><div class="cd-n">${esc(c.n)}</div><div class="cd-v">${esc(c.periodo||'Sin periodicidad')} - retiro ${retiroCliente(c.n)}</div></div><span class="pill p-pend"><i class="dot"></i>$${saldo(c)}</span></div>${env.map(e=>`<div class="fila"><span class="fila-n">${e.id}</span><div class="fila-m"><div class="fila-t">Cargo por envio - $${e.precio||0}</div><div class="fila-s">${esc(e.destinatario)} - saldo mantiene historial</div></div></div>`).join('')||'<div class="hint">Sin movimientos de envio.</div>'}<button class="btn sm soft full" data-pago-cc="${c.id}">Registrar pago parcial</button></div>`}).join('')}</div>`;
+}
+
 function vReportes(){
   const total=ENVIOS.length,ent=ENVIOS.filter(e=>e.estado==='entregado').length,inc=ENVIOS.filter(e=>e.estado==='incidencia').length;
   const porCliente=CLI.map(c=>({n:c.n,v:ENVIOS.filter(e=>e.cliente===c.n).length})).filter(x=>x.v);
@@ -1542,8 +1580,8 @@ function vZonas(){
       <span class="pill p-ent"><i class="dot"></i>${esc(z.estado)}</span></div>
       <div class="btnrow" style="margin-top:12px"><button class="btn sm soft" data-zona="${k}|${z.precio+50}">Subir $50</button>
       <button class="btn sm soft" data-zona="${k}|${Math.max(100,z.precio-50)}">Bajar $50</button></div></div>`).join('')}</div>
-    <div class="panel"><div class="panel-t">Regla de urgencia</div>
-      <div class="note"><span class="ni">⚡</span><div>Los envíos urgentes se destacan en planificación y vista del cadete. El recargo se valida con reglas comerciales.</div></div></div>`;
+    <div class="panel"><div class="panel-t">Regla de express</div>
+      <div class="note"><span class="ni">⚡</span><div>Express cuesta $250, queda sujeto a aprobacion y se destaca en planificacion y vista del cadete.</div></div></div>`;
 }
 
 function vAcceso(){
@@ -1601,8 +1639,8 @@ function vTareas(){
       <dt>Horario</dt><dd>${px.ventana}</dd>
       <dt>Bultos</dt><dd>${px.paquetes.length} ${px.paquetes.length===1?'bulto':'bultos'}</dd>
       ${px.notas?`<dt>Ojo</dt><dd>${esc(px.notas)}</dd>`:''}</dl>
-      ${px.urgente||px.fragil?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-        ${px.urgente?'<span class="urg">⚡ URGENTE</span>':''}
+      ${px.express||px.fragil?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        ${px.express?'<span class="urg">⚡ EXPRESS</span>':''}
         ${px.fragil?'<span class="frag">◆ FRÁGIL · manejar con cuidado</span>':''}</div>`:''}
     </div></div>`:''}
   ${m.length?`<div class="sec"><div class="sec-h"><h3>Ruta asignada</h3><span class="more">${routeSteps(m).length}</span></div>
@@ -1671,11 +1709,13 @@ function shDet(){
       <button class="hd-b" data-close aria-label="Cerrar">×</button></div>
     <div class="sh-b">
       <div class="panel"><div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:15px">
-        ${pill(e.estado)}${e.urgente?'<span class="urg">URGENTE</span>':''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}</div>
+        ${pill(e.estado)}${e.express?`<span class="urg">EXPRESS · ${esc(e.expressEstado||'Solicitado')}</span>`:''}${e.fragil?'<span class="frag">◆ FRÁGIL</span>':''}</div>
         <dl class="kv"><dt>Envía</dt><dd>${esc(e.cliente)}</dd>
         <dt>Retiro</dt><dd>${esc(e.retiro)}</dd>
         <dt>Entrega</dt><dd>${esc(e.entrega)}</dd>
-        <dt>Horario</dt><dd>${esc(e.ventana)}</dd>
+        <dt>Fecha retiro</dt><dd>${labelDia(e.fechaRetiro||e.fecha)} ${numDia(e.fechaRetiro||e.fecha)}</dd>
+        <dt>Fecha entrega</dt><dd>${labelDia(e.fechaEntrega||e.fecha)} ${numDia(e.fechaEntrega||e.fecha)}</dd>
+        <dt>Franja entrega</dt><dd>${esc(e.ventana)}</dd>
         ${!cli?`<dt>Cadete</dt><dd>${e.cadete?cadIc(e.cadete)+' '+esc(cadN(e.cadete)):'Sin asignar'}</dd>
         <dt>Custodia</dt><dd>${esc(e.custodia)}</dd>`:''}</dl></div>
       <div class="panel"><div class="panel-t">Bultos del envío · mismo destino</div>
@@ -1687,12 +1727,47 @@ function shDet(){
           <div class="tl-m">${fch(h.ts)} ${hhmm(h.ts)}${h.showWho?' · '+esc(h.who):''}</div></div>`).join('')}</div></div>
     </div>
     <div class="sh-f">
+      ${!cli&&e.express&&e.expressEstado==='Pendiente de aprobacion'?`<button class="btn lg pri" data-express-review="${e.id}">Resolver express</button>`:''}
       ${!cli&&['asignado','retirado','ruta','parcial','incidencia'].includes(e.estado)?`<button class="btn lg soft" data-custodia="${e.id}">Custodia</button>`:''}
       ${!cli?`<button class="btn lg soft" data-incidencia="${e.id}">Incidencia</button>`:''}
       ${!cli?`<button class="btn lg soft" data-evidencia="${e.id}">Evidencia</button>`:''}
       ${!cli&&e.estado==='asignado'?`<button class="btn lg pri" data-retiro="${e.id}">Confirmar retiro</button>`:''}
       ${!cli&&['retirado','ruta','parcial'].includes(e.estado)?`<button class="btn lg pri" data-entrega="${e.id}">Confirmar entrega</button>`:''}
       <button class="btn lg soft" data-close style="${!cli&&['asignado','retirado','ruta','parcial'].includes(e.estado)?'flex:0 0 92px':''}">Cerrar</button></div>
+  </div></div>`;
+}
+
+function shExpress(){
+  if(!EXPRESS)return'';
+  const e=ENVIOS.find(x=>x.id===EXPRESS.envio);if(!e)return'';
+  const entregaOpts=JORNADAS.filter(f=>f>=EXPRESS.fechaRetiro);
+  if(!entregaOpts.includes(EXPRESS.fechaEntrega))EXPRESS.fechaEntrega=entregaOpts[0]||EXPRESS.fechaRetiro;
+  const franjas=franjasDisponibles(EXPRESS.fechaEntrega);
+  if(EXPRESS.ventana&&!FRANJAS.includes(EXPRESS.ventana))EXPRESS.ventana='';
+  return `<div class="sh-bg" data-closeexpress><div class="sh" role="dialog" aria-label="Resolver express">
+    <div class="grab"></div><div class="sh-h"><div><div class="hint" style="font-weight:700">${e.id}</div>
+      <h3>Solicitud express</h3></div><button class="hd-b" data-closeexpress aria-label="Cerrar">×</button></div>
+    <div class="sh-b">
+      <div class="panel"><dl class="kv">
+        <dt>Cliente</dt><dd>${esc(e.cliente)}</dd>
+        <dt>Retiro</dt><dd>${esc(e.retiro)}</dd>
+        <dt>Entrega</dt><dd>${esc(e.entrega)}</dd>
+        <dt>Precio</dt><dd><b>$${precioEnvio(e.cliente,true,false)}</b></dd>
+      </dl></div>
+      <div class="grid2"><div class="field"><label for="ex-ret">Retiro</label>
+        <select id="ex-ret">${JORNADAS.slice(0,6).map(f=>`<option value="${f}" ${EXPRESS.fechaRetiro===f?'selected':''}>${labelDia(f)} ${numDia(f)}</option>`).join('')}</select></div>
+        <div class="field"><label for="ex-ent">Entrega</label>
+        <select id="ex-ent">${entregaOpts.slice(0,6).map(f=>`<option value="${f}" ${EXPRESS.fechaEntrega===f?'selected':''}>${labelDia(f)} ${numDia(f)}</option>`).join('')}</select></div></div>
+      <div class="field"><label for="ex-ven">Franja de entrega</label>
+        <select id="ex-ven"><option value="">Elegí una franja...</option>${franjas.map(v=>`<option ${EXPRESS.ventana===v?'selected':''}>${v}</option>`).join('')}</select>
+        ${EXPRESS.err?`<div class="err">! ${EXPRESS.err}</div>`:''}</div>
+      <div class="field"><label for="ex-obs">Comentario interno</label>
+        <textarea id="ex-obs" placeholder="Ej. se retira hoy y se entrega mañana">${esc(EXPRESS.obs||'')}</textarea>
+        ${EXPRESS.errObs?`<div class="err">! ${EXPRESS.errObs}</div>`:''}</div>
+      <div class="note"><span class="ni">⚡</span><div><b>Resultado al aprobar:</b> retiro ${labelDia(EXPRESS.fechaRetiro)} ${numDia(EXPRESS.fechaRetiro)} y entrega ${labelDia(EXPRESS.fechaEntrega)} ${numDia(EXPRESS.fechaEntrega)}${EXPRESS.ventana?' de '+EXPRESS.ventana:''}. La planificación usa la fecha de retiro.</div></div>
+    </div>
+    <div class="sh-f"><button class="btn lg danger" data-express-reject="${e.id}">Rechazar solicitud</button>
+      <button class="btn lg pri" id="express-approve">Aprobar express</button></div>
   </div></div>`;
 }
 
@@ -1762,6 +1837,7 @@ function shOp(){
       <h3>${esc(r?e.cliente:e.destinatario)}</h3></div>
       <button class="hd-b" data-closeop aria-label="Cerrar">×</button></div>
     <div class="sh-b">
+      ${((r&&e.pagoModo==='retiro')||(!r&&e.pagoModo==='entrega'))&&e.pagoEstado==='Pendiente'?`<div class="note warn" style="margin-bottom:14px"><span class="ni">$</span><div><b>Cobrar al ${r?'retirar':'entregar'}.</b> Al confirmar queda registrado como pago recibido por el cadete.</div></div>`:''}
       ${e.fragil?`<div class="note warn" style="margin-bottom:14px"><span class="ni">◆</span>
         <div><b>Contenido frágil.</b> Manejá los bultos con cuidado al ${r?'cargarlos':'entregarlos'}.</div></div>`:''}
       <div class="panel"><div class="panel-t">${r?'Retirar':'Entregar'} envío completo</div>
@@ -1812,7 +1888,7 @@ function shPick(){
       ${disp.length?`<div class="panel">${disp.map(e=>`
       <label class="pk ${PICK.sel.includes(e.id)?'on':''}" style="align-items:flex-start">
         <input type="checkbox" class="chk" data-pick="${e.id}" ${PICK.sel.includes(e.id)?'checked':''} style="margin-top:3px">
-        <div class="pk-d"><b>${e.id}</b>${e.urgente?' <span class="urg">URGENTE</span>':''}${e.fragil?' <span class="frag">◆ FRÁGIL</span>':''}<br>
+        <div class="pk-d"><b>${e.id}</b>${e.express?' <span class="urg">EXPRESS</span>':''}${e.fragil?' <span class="frag">◆ FRÁGIL</span>':''}<br>
           <span style="font-weight:700">${esc(e.destinatario)}</span><br>
           <span class="hint">${esc(e.entrega)}<br>${e.ventana} · ${e.paquetes.length} bulto${e.paquetes.length>1?'s':''}</span></div>
       </label>`).join('')}</div>`:
@@ -2090,11 +2166,11 @@ function render(){
   const navOverDock=dock&&['inicio','alta','nuevo','masiva','clientes','control','acceso'].includes(TAB);
   document.body.classList.toggle('has-dock',dock);
   document.body.classList.toggle('dock-over',navOverDock);
-  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(CUST?shCustodia():'')+(INC?shIncidencia():'')+(EVID?shEvidencia():'')+(JORNADA?shJornada():'')+(PICK?shPick():'')+(MOVE?shMove():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
+  $('#layer').innerHTML=(SEL?shDet():'')+(OP?shOp():'')+(CUST?shCustodia():'')+(INC?shIncidencia():'')+(EVID?shEvidencia():'')+(EXPRESS?shExpress():'')+(JORNADA?shJornada():'')+(PICK?shPick():'')+(MOVE?shMove():'')+(ATRAS?shAtras():'')+(CAL?shCal():'')+
     (CREATED?shCreated():'')+(LABEL?shLabel():'')+(PAY?shPay():'')+
     (TOAST?`<div class="toast">${esc(TOAST)}</div>`:'');
   ['admin','cadete','cliente','futuro'].forEach(r=>{const el=$('#r-'+r);if(el)el.setAttribute('aria-pressed',String(ROL===r))});
-  document.body.style.overflow=(SEL||OP||CUST||INC||EVID||PICK||MOVE||JORNADA||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
+  document.body.style.overflow=(SEL||OP||CUST||INC||EVID||EXPRESS||PICK||MOVE||JORNADA||ATRAS||CAL||LABEL||CREATED||PAY)?'hidden':'';
 }
 
 /* ===== eventos ===== */
@@ -2104,7 +2180,7 @@ document.addEventListener('click',ev=>{
   if(c('#theme')){const r=document.documentElement;
     const dk=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme:dark)').matches);
     r.setAttribute('data-theme',dk?'light':'dark');return}
-  for(const r of ['admin','cadete','cliente','futuro'])if(c('#r-'+r)){ROL=r;SEL=OP=CUST=INC=EVID=PICK=MOVE=null;JORNADA=false;DRAFT=null;
+  for(const r of ['admin','cadete','cliente','futuro'])if(c('#r-'+r)){ROL=r;SEL=OP=CUST=INC=EVID=EXPRESS=PICK=MOVE=null;JORNADA=false;DRAFT=null;
     TAB=NAV[r][0].k;topPage();render();return}
   const tb=c('[data-tab]');if(tb){TAB=tb.dataset.tab;topPage();render();return}
   const go=c('[data-go]');if(go){
@@ -2162,6 +2238,8 @@ document.addEventListener('click',ev=>{
     audit('Reporte exportado','Formato '+tipo,'Admin');toast('Reporte '+tipo+' exportado');return}
   const zona=c('[data-zona]');if(zona){const [k,precio]=zona.dataset.zona.split('|');
     if(ZONAS[k]){ZONAS[k].precio=Number(precio);audit('Zona actualizada',`${ZONAS[k].l} · tarifa $${ZONAS[k].precio}`,'Admin');render()}return}
+  const exReview=c('[data-express-review]');if(exReview){const e=ENVIOS.find(x=>x.id===exReview.dataset.expressReview);
+    if(e){EXPRESS={envio:e.id,fechaRetiro:e.fechaRetiro||e.fecha||HOY,fechaEntrega:e.fechaEntrega||e.fecha||HOY,ventana:e.ventana||FRANJAS[0],obs:''};SEL=null;render()}return}
   const op=c('[data-open]');if(op){const e=ENVIOS.find(x=>x.id===op.dataset.open);
     if(ROL==='admin'&&e&&esPasado(e.fecha)&&['pendiente','asignado','incidencia'].includes(e.estado)){
       ATRAS=e.id;JORNADA=false;render();return}
@@ -2171,6 +2249,7 @@ document.addEventListener('click',ev=>{
   if(closeHit('[data-closecust]')){CUST=null;render();return}
   if(closeHit('[data-closeinc]')){INC=null;render();return}
   if(closeHit('[data-closeevid]')){EVID=null;render();return}
+  if(closeHit('[data-closeexpress]')){EXPRESS=null;render();return}
   if(closeHit('[data-closepick]')){PICK=null;render();return}
   if(closeHit('[data-closemove]')){MOVE=null;render();return}
   if(closeHit('[data-closejornada]')){JORNADA=false;render();return}
@@ -2178,6 +2257,7 @@ document.addEventListener('click',ev=>{
   if(closeHit('[data-closecreated]')){CREATED=null;render();return}
   if(closeHit('[data-closepay]')){PAY=null;render();return}
 
+  if(c('#pay-confirm')&&PAY){const e=ENVIOS.find(x=>x.id===PAY); if(e){e.pagoEstado='Validado'; e.hist.push(evt('Comprobante validado','Pago del envio confirmado por administracion','Admin')); audit('Comprobante validado',e.id,'Admin'); PAY=null; toast('Comprobante validado')} return}
   const ret=c('[data-retiro]');if(ret){OP={tipo:'retiro',envio:ret.dataset.retiro,obs:''};SEL=null;render();return}
   const ent=c('[data-entrega]');if(ent){OP={tipo:'entrega',envio:ent.dataset.entrega,obs:'',receptor:''};SEL=null;render();return}
   const cu=c('[data-custodia]');if(cu){const e=ENVIOS.find(x=>x.id===cu.dataset.custodia);
@@ -2200,6 +2280,22 @@ document.addEventListener('click',ev=>{
     if(e){e.hist.push(evt('Evidencia registrada',`${EVID.tipo}${EVID.obs?' · '+EVID.obs:''}`,'Admin'));
       audit('Evidencia registrada',`${e.id} · ${EVID.tipo}`,'Admin');EVID=null;toast('Evidencia guardada')}return}
 
+  const exReject=c('[data-express-reject]');if(exReject&&EXPRESS){const e=ENVIOS.find(x=>x.id===EXPRESS.envio);
+    if(!(EXPRESS.obs||'').trim()){EXPRESS.errObs='Agrega un motivo para rechazar la solicitud.';render();return}
+    if(e){e.express=false;e.expressEstado='Rechazado';e.precio=precioEnvio(e.cliente,false,e.paqueteEspecial);
+      e.hist.push(evt('Express rechazado',EXPRESS.obs||'Solicitud express no aprobada','Admin'));
+      audit('Express rechazado',e.id,'Admin');EXPRESS=null;toast('Express rechazado');render()}return}
+  if(c('#express-approve')&&EXPRESS){const e=ENVIOS.find(x=>x.id===EXPRESS.envio);
+    if(!EXPRESS.ventana){EXPRESS.err='Elegi una franja de entrega.';render();return}
+    if(e){e.express=true;e.expressEstado='Aprobado';e.fechaRetiro=EXPRESS.fechaRetiro;e.fechaEntrega=EXPRESS.fechaEntrega;
+      e.fecha=EXPRESS.fechaRetiro;e.ventana=EXPRESS.ventana;e.precio=precioEnvio(e.cliente,true,e.paqueteEspecial);
+      e.hist.push(evt('Express aprobado',`Retiro ${labelDia(e.fechaRetiro)} ${numDia(e.fechaRetiro)} · entrega ${labelDia(e.fechaEntrega)} ${numDia(e.fechaEntrega)} ${e.ventana}${EXPRESS.obs?' · '+EXPRESS.obs:''}`,'Admin'));
+      audit('Express aprobado',`${e.id} · retiro ${e.fechaRetiro} · entrega ${e.fechaEntrega}`,'Admin');
+      for(const k in PLANI)PLANI[k]=PLANI[k].filter(id=>id!==e.id);
+      for(const k in ROUTE_PLAN)ROUTE_PLAN[k]=ROUTE_PLAN[k].filter(id=>id!==e.id);
+      for(const k in ROUTE_STOPS)ROUTE_STOPS[k]=ROUTE_STOPS[k].filter(id=>!id.endsWith(':'+e.id));
+      EXPRESS=null;DIA=e.fechaRetiro;toast('Express aprobado');render()}return}
+
   if(c('[data-fallo]')&&OP){const e=ENVIOS.find(x=>x.id===OP.envio);
     e.paquetes.forEach(p=>{if(['pendiente','asignado','retirado','ruta'].includes(p.estado))p.estado='incidencia'});
     e.estado='incidencia';
@@ -2214,6 +2310,11 @@ document.addEventListener('click',ev=>{
     const el=e.paquetes.filter(p=>r?['pendiente','asignado'].includes(p.estado):['retirado','ruta'].includes(p.estado));
     el.forEach(p=>p.estado=r?'retirado':'entregado');
     const n=el.length;
+    const cobrar=(r&&e.pagoModo==='retiro')||(!r&&e.pagoModo==='entrega');
+    if(cobrar&&e.pagoEstado==='Pendiente'){
+      e.pagoEstado='Pagado';
+      e.hist.push(evt('Pago recibido',`Efectivo cobrado al ${r?'retirar':'entregar'} · $${e.precio||0}`,'Martín R.'));
+    }
     if(r){e.custodia='Martín Rodríguez';
       e.hist.push(evt(`Retiro confirmado · ${n} bulto${n>1?'s':''}`,
         `Custodia: remitente → Martín Rodríguez${OP.obs?' · '+OP.obs:''}`,'Martín R.'))}
@@ -2340,7 +2441,6 @@ document.addEventListener('click',ev=>{
   if(c('[data-pay]')){PAY=c('[data-pay]').dataset.pay;render();return}
   if(c('#print-label')){toast('Impresión simulada');return}
   if(c('#pay-file')){toast('Archivo seleccionado');return}
-  if(c('#pay-confirm')){PAY=null;toast('Comprobante guardado');return}
   if(c('#f-frag')){DRAFT.fragil=!DRAFT.fragil;render();return}
   const combo=c('[data-combo]');if(combo&&DRAFT){const k=combo.dataset.combo;
     if(k==='cliente'){DRAFT.clienteOpen=!DRAFT.clienteOpen;DRAFT.retiroOpen=false}
@@ -2348,6 +2448,7 @@ document.addEventListener('click',ev=>{
     render();setTimeout(()=>document.querySelector(k==='cliente'?'#cli-search':'#ret-search')?.focus(),40);return}
   const cliPick=c('[data-cli-pick]');if(cliPick&&DRAFT){DRAFT.cliente=cliPick.dataset.cliPick;
     DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};
+    DRAFT.pagoModo=tieneCC(DRAFT.cliente)?'cc':'';
     DRAFT.clienteOpen=false;DRAFT.retiroOpen=false;DRAFT.clienteQ='';DRAFT.retiroQ='';render();return}
   const retPick=c('[data-ret-pick]');if(retPick&&DRAFT){DRAFT.retiro=retPick.dataset.retPick;
     DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;DRAFT.retiroOpen=false;DRAFT.retiroQ='';render();return}
@@ -2367,8 +2468,10 @@ document.addEventListener('click',ev=>{
       }else if(!retiroDraft(d))d.err.retiro='Falta completar la dirección de retiro.'}
     if(d.paso===2){d.entrega=entregaDraft(d);if(!d.dest.trim())d.err.dest='Falta quién recibe.';
       if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';
-      if(!d.ventana)d.err.ventana='Elegí un horario.';
-      else if(!franjaVigente(d.ventana,d.fecha))d.err.ventana='Esa franja ya pasó. Elegí otra.'}
+      if(!d.ventana)d.err.ventana='Elegi una franja de entrega.';
+      else if(!franjaVigente(d.ventana,d.fecha))d.err.ventana='Esa franja ya paso. Elegi otra.';
+      if(!pagoDraft(d))d.err.pago='Elegi una forma de pago.'}
+    if(d.paso===3&&d.paquetes[0].tam==='ESP'&&!d.paqueteDesc.trim())d.err.paquete='Describi el paquete especial para que administracion lo apruebe.';
     if(Object.keys(d.err).length){render();return}
     d.paso++;topPage();render();return}
   if(c('#crear')){const d=DRAFT;
@@ -2383,8 +2486,8 @@ document.addEventListener('click',ev=>{
     const cl=CLI.find(x=>x.n===d.cliente),retiro=retiroDraft(d);
     if(cl&&d.favRetiro&&retiro&&!cl.dirs.some(x=>x.toLowerCase()===retiro.toLowerCase()))cl.dirs.push(retiro);
     const e=mk({cliente:d.cliente,retiro:retiro,destinatario:d.dest,tel:d.tel,entrega:entregaDraft(d),
-      fecha:d.fecha,ventana:d.ventana,zona:d.zona,precio:precioZona(d.zona),
-      urgente:d.urgente,fragil:d.fragil,notas:d.notas,paquetes:d.paquetes.map(p=>({tam:p.tam}))});
+      fecha:d.fecha,fechaRetiro:d.fecha,fechaEntrega:d.fecha,ventana:d.ventana,zona:d.zona,precio:precioEnvio(d.cliente,d.express,d.paquetes[0].tam==='ESP'),
+      express:d.express,fragil:d.fragil,notas:d.notas,pagoModo:pagoDraft(d),pagoEstado:pagoDraft(d)==='cc'?'En cuenta corriente':'Pendiente',paqueteEspecial:d.paquetes[0].tam==='ESP',paqueteDesc:d.paqueteDesc,paquetes:d.paquetes.map(p=>({tam:p.tam}))});
     ENVIOS.unshift(e);DRAFT=null;TAB=ROL==='cliente'?'mis':'envios';CREATED=e.id;topPage();render();return}
 });
 
@@ -2394,6 +2497,11 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='cust-to'&&CUST){CUST.to=t.value;return}
   if(t.id==='inc-tipo'&&INC){INC.tipo=t.value;return}
   if(t.id==='evid-tipo'&&EVID){EVID.tipo=t.value;return}
+  if(t.id==='ex-ret'&&EXPRESS){EXPRESS.fechaRetiro=t.value;
+    if(EXPRESS.fechaEntrega<EXPRESS.fechaRetiro)EXPRESS.fechaEntrega=EXPRESS.fechaRetiro;
+    EXPRESS.err=null;render();return}
+  if(t.id==='ex-ent'&&EXPRESS){EXPRESS.fechaEntrega=t.value;EXPRESS.err=null;render();return}
+  if(t.id==='ex-ven'&&EXPRESS){EXPRESS.ventana=t.value;EXPRESS.err=null;return}
   if(t.id==='f-cli'){DRAFT.cliente=t.value;DRAFT.retiro='';DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err={};render();return}
   if(t.id==='f-ret'){DRAFT.retiro=t.value;DRAFT.retiroNuevo='';DRAFT.favRetiro=false;DRAFT.err.retiro=null;render();return}
   if(t.id==='f-fav-ret'){DRAFT.favRetiro=t.checked;return}
@@ -2403,7 +2511,8 @@ document.addEventListener('change',e=>{const t=e.target;
     DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ent-loc'){DRAFT.entregaCosta.loc=t.value;DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ven'){DRAFT.ventana=t.value;return}
-  if(t.id==='f-urg'){DRAFT.urgente=!!t.value;return}
+  if(t.id==='f-pago'){DRAFT.pagoModo=t.value;DRAFT.err.pago=null;return}
+  if(t.id==='f-urg'){DRAFT.express=!!t.value;return}
   if(t.dataset.pick&&PICK){PICK.sel=t.checked?[...PICK.sel,t.dataset.pick]:PICK.sel.filter(x=>x!==t.dataset.pick);render();return}
 });
 
@@ -2423,6 +2532,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='cust-obs'&&CUST)CUST.obs=t.value;
   if(t.id==='inc-desc'&&INC){INC.desc=t.value;INC.err=null}
   if(t.id==='evid-obs'&&EVID)EVID.obs=t.value;
+  if(t.id==='ex-obs'&&EXPRESS){EXPRESS.obs=t.value;EXPRESS.errObs=null}
   if(t.dataset.base){
     const c=CAD.find(x=>x.id===t.dataset.base);
     if(c)c.base=t.value;
@@ -2440,6 +2550,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='f-ent-manzana'){DRAFT.entregaCosta.manzana=t.value;DRAFT.err.entrega=null}
   if(t.id==='f-ent-solar'){DRAFT.entregaCosta.solar=t.value;DRAFT.err.entrega=null}
   if(t.id==='f-ent-desc'){DRAFT.entregaCosta.desc=t.value;DRAFT.err.entrega=null}
+  if(t.id==='f-pk-desc'){DRAFT.paqueteDesc=t.value;DRAFT.err.paquete=null}
   if(t.id==='f-not')DRAFT.notas=t.value;
   if(t.id==='op-obs'&&OP)OP.obs=t.value;
   if(t.id==='op-rec'&&OP){OP.receptor=t.value;OP.err=null}
