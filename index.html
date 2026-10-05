@@ -1259,6 +1259,7 @@ function vAlta(){
   }else if(d.paso===2){
     const fechas=jornadasZona(d.zona);
     if(!fechas.includes(d.fecha))d.fecha=fechas[0];
+    const requiereExpressHoy=d.fecha===HOY&&rutaArmadaFecha(HOY);
     b=`<div class="grid2"><div class="field"><label for="f-dest">¿Quién recibe?</label>
       <input id="f-dest" value="${esc(d.dest)}" placeholder="Nombre y apellido" autocomplete="name">
       ${d.err.dest?`<div class="err">⚠ ${d.err.dest}</div>`:''}</div>
@@ -1296,6 +1297,7 @@ function vAlta(){
             <span class="dp-d">${labelDia(d.fecha)}</span><span class="dp-n">${numDia(d.fecha)}</span></button>`:''}
         </div>
         <span class="hint" style="margin-top:8px;display:block">El cliente elige una sola fecha. Retiro y entrega nacen ese mismo dia.</span>
+        ${requiereExpressHoy?`<div class="note warn" style="margin-top:10px"><span class="ni">⚡</span><div>La ruta de hoy ya fue armada. Para pedir retiro hoy, este envio debe entrar como express y quedar sujeto a aprobacion.</div></div>`:''}
       </div>
       <div class="field"><label for="f-ven">Franja de entrega</label>
       <select id="f-ven"><option value="">Elegí una franja…</option>
@@ -1303,7 +1305,9 @@ function vAlta(){
       ${!frDisp.length?`<div class="err">⚠ No quedan franjas disponibles para hoy. Elegí otro día.</div>`:''}
       ${d.err.ventana?`<div class="err">⚠ ${d.err.ventana}</div>`:''}</div>
       <div class="field"><label for="f-urg">Express</label>
-      <select id="f-urg"><option value="">No, normal ($200)</option><option value="1" ${d.express?'selected':''}>Solicitar express ($250, sujeto a aprobacion)</option></select></div>
+      <select id="f-urg"><option value="">No, normal ($200)</option><option value="1" ${d.express?'selected':''}>Solicitar express ($250, sujeto a aprobacion)</option></select>
+      ${requiereExpressHoy?`<span class="hint">Obligatorio para envios de hoy cuando las rutas ya comenzaron.</span>`:''}
+      ${d.err.express?`<div class="err">! ${d.err.express}</div>`:''}</div>
       <div class="field"><label for="f-pago">Forma de pago del envio</label><select id="f-pago"><option value="">Elegi una forma...</option>${tieneCC(d.cliente)?`<option value="cc" ${pagoDraft(d)==='cc'?'selected':''}>Cuenta corriente</option>`:''}<option value="comprobante" ${pagoDraft(d)==='comprobante'?'selected':''}>Transferencia / comprobante</option><option value="retiro" ${pagoDraft(d)==='retiro'?'selected':''}>Efectivo al retirar</option><option value="entrega" ${pagoDraft(d)==='entrega'?'selected':''}>Efectivo al entregar</option></select>${tieneCC(d.cliente)?`<span class="hint">Por defecto va a cuenta corriente, pero podés cambiarlo solo para este envío.</span>`:''}${d.err.pago?`<div class="err">! ${d.err.pago}</div>`:''}</div>
       <div class="field"><label for="f-not">Algo más que debamos saber</label>
       <textarea id="f-not" placeholder="Referencias, timbre, horarios…">${esc(d.notas)}</textarea></div>`;
@@ -2390,6 +2394,7 @@ document.addEventListener('click',ev=>{
   if(closeHit('[data-closecal]')){CAL=false;render();return}
   const fe=c('[data-fecha]');if(fe&&DRAFT){
     DRAFT.fecha=fe.dataset.fecha;
+    DRAFT.err.express=null;
     if(DRAFT.ventana&&!franjaVigente(DRAFT.ventana,DRAFT.fecha))DRAFT.ventana='';
     render();return}
   const at=c('[data-atras]');if(at){ATRAS=at.dataset.atras;render();return}
@@ -2470,6 +2475,7 @@ document.addEventListener('click',ev=>{
       if(!d.entrega)d.err.entrega='Falta completar la dirección de entrega.';
       if(!d.ventana)d.err.ventana='Elegi una franja de entrega.';
       else if(!franjaVigente(d.ventana,d.fecha))d.err.ventana='Esa franja ya paso. Elegi otra.';
+      if(d.fecha===HOY&&rutaArmadaFecha(HOY)&&!d.express)d.err.express='Para hoy, con rutas ya armadas, solo se acepta modalidad express.';
       if(!pagoDraft(d))d.err.pago='Elegi una forma de pago.'}
     if(d.paso===3&&d.paquetes[0].tam==='ESP'&&!d.paqueteDesc.trim())d.err.paquete='Describi el paquete especial para que administracion lo apruebe.';
     if(Object.keys(d.err).length){render();return}
@@ -2512,7 +2518,7 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='f-ent-loc'){DRAFT.entregaCosta.loc=t.value;DRAFT.err.entrega=null;render();return}
   if(t.id==='f-ven'){DRAFT.ventana=t.value;return}
   if(t.id==='f-pago'){DRAFT.pagoModo=t.value;DRAFT.err.pago=null;return}
-  if(t.id==='f-urg'){DRAFT.express=!!t.value;return}
+  if(t.id==='f-urg'){DRAFT.express=!!t.value;DRAFT.err.express=null;render();return}
   if(t.dataset.pick&&PICK){PICK.sel=t.checked?[...PICK.sel,t.dataset.pick]:PICK.sel.filter(x=>x!==t.dataset.pick);render();return}
 });
 
