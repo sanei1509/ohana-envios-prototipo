@@ -126,6 +126,14 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 .nav button .ic svg{display:block}
 .nav button .lb{display:inline;white-space:nowrap}
 .nav button[aria-pressed="true"]{background:var(--nav-pill);color:var(--brand)}
+/* En pantallas angostas solo la pestaña activa conserva el texto: con 7 secciones
+   los rótulos no entran y la barra terminaba desbordando. */
+@media(max-width:560px){
+  .nav button .lb{display:none}
+  .nav button[aria-pressed="true"] .lb{display:inline}
+  .nav button{padding:0 10px}
+  .nav button[aria-pressed="true"]{padding:0 14px}
+}
 .nav .badge{position:absolute;top:-5px;right:-8px;background:var(--bad);color:var(--on-solid);font-size:10px;
   font-weight:800;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;
   padding:0 4px;border:2px solid var(--nav-bg)}
@@ -133,9 +141,8 @@ body.dock-over .scroll{padding-bottom:calc(var(--navh) + 84px)}
 @media(max-width:390px){
   .nav{padding:0 10px}
   .nav-in{gap:1px;padding:6px}
-  .nav button{padding:0 8px;font-size:12px;gap:4px}
-  .nav button .ic{font-size:15px}
-  .nav button .ic svg{width:17px;height:17px}
+  .nav button{padding:0 8px;font-size:12.5px;gap:5px}
+  .nav button[aria-pressed="true"]{padding:0 12px}
 }
 
 /* ===== section ===== */
