@@ -295,7 +295,10 @@ body.dock-over .dock{bottom:var(--navh);padding-bottom:10px;
 .selectopt .sub{display:block;font-size:12px;font-weight:650;color:var(--ink-3);margin-top:2px}
 .selectopt .mark{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:var(--on-solid);font-size:12px}
 .selectopt.on .mark{background:var(--brand);border-color:var(--brand)}
+/* El texto de ayuda va entre la etiqueta y el combo, no adentro del botón. */
+.field > .hint{margin:-2px 0 8px}
 .combo{position:relative}
+.combo-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .combo-btn{width:100%;min-height:var(--tap);border-radius:15px;background:var(--soft);padding:12px 48px 12px 16px;
   display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border:1.5px solid transparent;
   font-size:15.5px;font-weight:750;color:var(--ink);position:relative}
@@ -1224,9 +1227,10 @@ function vAlta(){
     const clientesFiltrados=hab.filter(c=>(c.n+' '+c.tel+' '+(c.email||'')).toLowerCase().includes(q));
     const retirosFiltrados=cl?cl.dirs.filter(x=>x.toLowerCase().includes(rq)):[];
     b=`<div class="field"><label>¿Quién envía?</label>
+      <span class="hint">${nuevo?'Carga rápida desde este envío':cl?`${cl.dirs.length} dirección${cl.dirs.length>1?'es':''} de retiro guardada${cl.dirs.length>1?'s':''}`:'Buscá por nombre, teléfono o email'}</span>
       <div class="combo ${d.clienteOpen?'open':''}">
         <button class="combo-btn" data-combo="cliente" type="button">
-          <span>${nuevo?'Registrar cliente nuevo':d.cliente?esc(d.cliente):'Elegí un cliente...'}<span class="sub">${nuevo?'Carga rápida desde este envío':cl?`${cl.dirs.length} dirección${cl.dirs.length>1?'es':''} de retiro`:'Buscá por nombre, teléfono o email'}</span></span>
+          <span class="combo-val">${nuevo?'Registrar cliente nuevo':d.cliente?esc(d.cliente):'Seleccioná un cliente'}</span>
         </button>
         ${d.clienteOpen?`<div class="combo-menu">
           <div class="combo-search"><span class="ic">⌕</span><input id="cli-search" inputmode="search" value="${esc(d.clienteQ||'')}" placeholder="Buscar cliente..."></div>
@@ -1255,10 +1259,11 @@ function vAlta(){
           Crear también una cuenta de acceso al portal</label>
         <span class="hint" style="display:block;margin-top:10px">El cliente queda habilitado para este envío. El usuario de portal es opcional.</span>
       </div>`:
-      `<div class="field"><label>Direccion de retiro</label>
+      `<div class="field"><label>Dirección de retiro</label>
+      <span class="hint">${cl?'También podés escribir una dirección nueva más abajo':'Seleccioná primero un cliente para ver sus direcciones'}</span>
       <div class="combo ${d.retiroOpen?'open':''}">
         <button class="combo-btn" data-combo="retiro" type="button" ${cl?'':'disabled'}>
-          <span>${d.retiro?esc(d.retiro):(cl?'Elegí una dirección favorita...':'Primero elegí el cliente')}<span class="sub">${cl?'También podés escribir una nueva dirección abajo':'Seleccioná un cliente para ver direcciones'}</span></span>
+          <span class="combo-val">${d.retiro?esc(d.retiro):(cl?'Seleccioná una dirección':'Sin cliente seleccionado')}</span>
         </button>
         ${d.retiroOpen&&cl?`<div class="combo-menu">
           <div class="combo-search"><span class="ic">⌕</span><input id="ret-search" inputmode="search" value="${esc(d.retiroQ||'')}" placeholder="Buscar dirección..."></div>
